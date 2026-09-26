@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gaia Lake — Menu Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root{
+  --brand-1:#4C9D38; --brand-2:#1E9BD7;
+  --bg:#f4f6f3; --panel:#ffffff; --ink:#1b231c; --ink-soft:#6b7a6c; --line:#e4e9e2;
+  --danger:#c0392b; --danger-bg:#fbe7e4;
+  box-sizing:border-box;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+a{color:inherit;}
+
+/* ---------------- sign-in screen ---------------- */
+#signinScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.signin-card{background:var(--panel);border-radius:20px;padding:40px 32px;max-width:380px;width:100%;
+  text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.08);}
+.signin-card h1{font-size:1.3rem;margin:14px 0 6px;}
+.signin-card p{color:var(--ink-soft);font-size:.9rem;line-height:1.5;margin-bottom:22px;}
+.brand-badge{width:56px;height:56px;border-radius:14px;background:var(--brand-1);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto;}
+#gsiBtnHolder{display:flex;justify-content:center;}
+.signin-note{margin-top:16px;font-size:.78rem;color:var(--ink-soft);}
+.signin-error{margin-top:14px;background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:10px 12px;font-size:.85rem;display:none;}
+
+/* ---------------- app shell ---------------- */
+#appShell{display:none;min-height:100vh;}
+.sidebar{width:236px;flex:0 0 auto;background:var(--panel);border-right:1px solid var(--line);
+  padding:18px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;}
+.brand .mark{width:32px;height:32px;border-radius:9px;background:var(--brand-1);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex:0 0 auto;}
+.brand .txt{font-weight:800;font-size:.95rem;line-height:1.2;}
+.brand .txt small{display:block;font-weight:500;font-size:.7rem;color:var(--ink-soft);}
+.navitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:2px;
+  color:var(--ink-soft);font-weight:600;font-size:.88rem;border:none;background:none;width:100%;text-align:left;}
+.navitem:hover{background:#f0f3ef;}
+.navitem.active{background:var(--brand-1);color:#fff;}
+.navitem .ic{width:18px;text-align:center;}
+.nav-signout{margin-top:16px;color:var(--danger);}
+
+.main{flex:1;min-width:0;}
+.topbar{background:var(--panel);border-bottom:1px solid var(--line);padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;}
+.topbar h2{margin:0;font-size:1.15rem;}
+.topbar .who{font-size:.8rem;color:var(--ink-soft);}
+.content{padding:22px 24px 60px;max-width:1100px;}
+
+.app-flex{display:flex;}
+@media (max-width:820px){
+  .sidebar{position:fixed;left:-260px;z-index:20;transition:left .2s;box-shadow:0 0 0 100vmax rgba(0,0,0,0);}
+  .sidebar.open{left:0;box-shadow:0 0 0 100vmax rgba(0,0,0,.35);}
+  .menu-btn{display:inline-flex !important;}
+}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--panel);border-radius:9px;width:36px;height:36px;
+  align-items:center;justify-content:center;font-size:1.1rem;}
+
+/* ---------------- cards / stat tiles ---------------- */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+.stat-card .label{font-size:.78rem;color:var(--ink-soft);font-weight:600;}
+.stat-card .num{font-size:1.6rem;font-weight:800;margin-top:2px;}
+.panel-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:18px;}
+.panel-box h3{margin:0 0 14px;font-size:1rem;}
+.hint{font-size:.82rem;color:var(--ink-soft);line-height:1.5;}
+
+/* ---------------- buttons ---------------- */
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 16px;font-weight:700;font-size:.85rem;}
+.btn:hover{border-color:var(--brand-2);}
+.btn-primary{background:var(--brand-1);border-color:var(--brand-1);color:#fff;}
+.btn-primary:hover{filter:brightness(1.05);}
+.btn-danger{background:var(--danger-bg);border-color:var(--danger-bg);color:var(--danger);}
+.btn-sm{padding:6px 11px;font-size:.78rem;border-radius:8px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+.switch{position:relative;width:44px;height:24px;flex:0 0 auto;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;inset:0;background:#d3dad1;border-radius:999px;transition:.15s;cursor:pointer;}
+.slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;}
+.switch input:checked + .slider{background:var(--brand-1);}
+.switch input:checked + .slider::before{transform:translateX(20px);}
+
+/* ---------------- forms ---------------- */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:.82rem;font-weight:700;margin-bottom:5px;}
+.field input[type=text], .field input[type=number], .field input[type=tel], .field input[type=time],
+.field select, .field textarea{
+  width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:.9rem;background:#fbfcfb;}
+.field textarea{resize:vertical;min-height:64px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:560px){.field-row{grid-template-columns:1fr;}}
+.color-field{display:flex;align-items:center;gap:10px;}
+.color-field input[type=color]{width:44px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;}
+
+.tag-picker{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px;}
+.tag-chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.8rem;font-weight:600;background:#fbfcfb;}
+.tag-chip.selected{background:var(--brand-1);border-color:var(--brand-1);color:#fff;}
+.tag-add-row{display:flex;gap:8px;}
+.tag-add-row input{flex:1;}
+
+.dropzone{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fbfcfb;}
+.dropzone img{max-height:130px;border-radius:8px;margin-bottom:8px;}
+.dropzone .ph{font-size:1.8rem;opacity:.4;}
+
+/* ---------------- category / dish lists ---------------- */
+.cat-list{display:flex;flex-direction:column;gap:8px;}
+.cat-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+.cat-row .icon-in{width:60px;}
+.cat-row .name{flex:1;font-weight:700;}
+.cat-row .count{font-size:.78rem;color:var(--ink-soft);}
+.order-btns{display:flex;flex-direction:column;gap:2px;}
+.order-btns button{border:none;background:none;font-size:.7rem;color:var(--ink-soft);padding:0 4px;}
+
+.cat-pills{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px;}
+.cat-pill{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 15px;
+  font-weight:700;font-size:.82rem;white-space:nowrap;}
+.cat-pill.active{background:var(--brand-1);border-color:var(--brand-1);color:#fff;}
+
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.dish-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.dish-card .thumb{width:100%;aspect-ratio:4/3;object-fit:cover;background:#eef1ed;display:block;}
+.dish-card .thumb-ph{width:100%;aspect-ratio:4/3;background:#eef1ed;display:flex;align-items:center;justify-content:center;font-size:1.6rem;opacity:.4;}
+.dish-card .body{padding:12px 13px 13px;}
+.dish-card .name-row{display:flex;justify-content:space-between;gap:6px;}
+.dish-card .name{font-weight:700;font-size:.92rem;}
+.dish-card .price{font-size:.82rem;font-weight:700;color:var(--brand-1);white-space:nowrap;}
+.dish-card .tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0;}
+.dish-card .tags .tag-chip{padding:2px 8px;font-size:.68rem;}
+.dish-card .inactive-badge{font-size:.68rem;color:var(--danger);font-weight:700;}
+.dish-card .actions{display:flex;gap:8px;margin-top:8px;}
+
+/* ---------------- modal ---------------- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-start;justify-content:center;
+  z-index:50;overflow-y:auto;padding:30px 16px;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--panel);border-radius:18px;max-width:520px;width:100%;padding:24px 24px 22px;}
+.modal h3{margin:0 0 16px;}
+.modal-close{float:right;border:none;background:none;font-size:1.3rem;color:var(--ink-soft);}
+
+/* ---------------- QR ---------------- */
+.qr-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center;max-width:340px;}
+#qrCanvas{margin:0 auto 14px;}
+
+/* ---------------- toast ---------------- */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b231c;color:#fff;
+  padding:11px 20px;border-radius:10px;font-size:.85rem;opacity:0;pointer-events:none;transition:.2s;z-index:100;}
+#toast.show{opacity:1;transform:translate(-50%,-6px);}
+
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<!-- ============ SIGN-IN SCREEN ============ -->
+<div id="signinScreen">
+  <div class="signin-card">
+    <div class="brand-badge">🍃</div>
+    <h1>Gaia Lake — Menu Admin</h1>
+    <p>Sign in with the Google account that has editor access to the GuestView Drive folder.</p>
+    <div id="gsiBtnHolder"></div>
+    <div class="signin-note">Only accounts listed in <code>ADMIN_EMAILS</code> (config.js) can make changes.</div>
+    <div class="signin-error" id="signinError"></div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell" class="app-flex">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="mark">GL</div>
+      <div class="txt">Gaia Lake<small>Menu Admin</small></div>
+    </div>
+    <button class="navitem active" data-view="dashboard"><span class="ic">📊</span> Dashboard</button>
+    <button class="navitem" data-view="menu"><span class="ic">🍽️</span> Menu</button>
+    <button class="navitem" data-view="profile"><span class="ic">🏠</span> Profile</button>
+    <button class="navitem" data-view="settings"><span class="ic">⚙️</span> Settings</button>
+    <button class="navitem" data-view="qr"><span class="ic">🔗</span> QR Code</button>
+    <button class="navitem nav-signout" id="signOutBtn"><span class="ic">↩</span> Sign Out</button>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <h2 id="viewTitle">Dashboard</h2>
+      </div>
+      <div class="who" id="whoAmI"></div>
+    </div>
+    <div class="content">
+
+      <!-- ---------- DASHBOARD ---------- -->
+      <section id="view-dashboard">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="label">Categories</div><div class="num" id="statCats">–</div></div>
+          <div class="stat-card"><div class="label">Dishes</div><div class="num" id="statDishes">–</div></div>
+          <div class="stat-card"><div class="label">Active Dishes</div><div class="num" id="statActive">–</div></div>
+          <div class="stat-card"><div class="label">Photos Uploaded</div><div class="num" id="statPhotos">–</div></div>
+        </div>
+        <div class="panel-box">
+          <h3>Accepting Orders</h3>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <label class="switch"><input type="checkbox" id="dashAcceptToggle"><span class="slider"></span></label>
+            <span id="dashAcceptLabel" class="hint"></span>
+          </div>
+        </div>
+        <div class="panel-box">
+          <h3>Sync status</h3>
+          <div class="hint" id="syncStatus">—</div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn" id="refreshBtn">↻ Refresh from Drive</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- MENU ---------- -->
+      <section id="view-menu" class="hidden">
+        <div class="panel-box">
+          <h3>Categories</h3>
+          <div class="cat-list" id="catList"></div>
+          <div class="btn-row" style="margin-top:12px;">
+            <button class="btn btn-primary" id="addCatBtn">+ Add Category</button>
+          </div>
+        </div>
+
+        <div class="panel-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+            <h3 style="margin:0;">Dishes</h3>
+            <button class="btn btn-primary" id="addDishBtn">+ Add New Dish</button>
+          </div>
+          <div class="cat-pills" id="dishCatFilter"></div>
+          <div class="dish-grid" id="dishGrid"></div>
+        </div>
+      </section>
+
+      <!-- ---------- PROFILE ---------- -->
+      <section id="view-profile" class="hidden">
+        <div class="panel-box">
+          <h3>Restaurant Profile</h3>
+          <div class="field-row">
+            <div>
+              <div class="field"><label>Logo</label>
+                <div class="dropzone" id="logoDrop"><div class="ph">🖼️</div><div class="hint">Click to upload logo</div></div>
+                <input type="file" id="logoInput" accept="image/*" class="hidden">
+              </div>
+            </div>
+            <div>
+              <div class="field"><label>Banner</label>
+                <div class="dropzone" id="bannerDrop"><div class="ph">🖼️</div><div class="hint">Click to upload banner</div></div>
+                <input type="file" id="bannerInput" accept="image/*" class="hidden">
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Restaurant Name</label><input type="text" id="pName"></div>
+          <div class="field-row">
+            <div class="field"><label>Phone Number</label><input type="tel" id="pPhone" placeholder="+94 77 291 1501"></div>
+            <div class="field"><label>City</label><input type="text" id="pCity" placeholder="Kandalama"></div>
+          </div>
+          <div class="field"><label>Country</label><input type="text" id="pCountry" placeholder="Sri Lanka"></div>
+          <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+        </div>
+      </section>
+
+      <!-- ---------- SETTINGS ---------- -->
+      <section id="view-settings" class="hidden">
+        <div class="panel-box">
+          <h3>Accepting Orders</h3>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <label class="switch"><input type="checkbox" id="settAcceptToggle"><span class="slider"></span></label>
+            <span class="hint">Customers see "Currently Closed" when this is off, regardless of kitchen hours.</span>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Kitchen Opens</label><input type="time" id="kitchenOpen"></div>
+            <div class="field"><label>Kitchen Closes</label><input type="time" id="kitchenClose"></div>
+          </div>
+          <div class="hint">Times are in Sri Lanka time (Asia/Colombo), regardless of a guest's own timezone.</div>
+        </div>
+
+        <div class="panel-box">
+          <h3>Brand Colours</h3>
+          <div class="field-row">
+            <div class="field"><label>Primary Colour</label>
+              <div class="color-field"><input type="color" id="colorPrimary" value="#4C9D38"><span id="colorPrimaryHex" class="hint">#4C9D38</span></div>
+            </div>
+            <div class="field"><label>Secondary Colour</label>
+              <div class="color-field"><input type="color" id="colorSecondary" value="#1E9BD7"><span id="colorSecondaryHex" class="hint">#1E9BD7</span></div>
+            </div>
+          </div>
+          <div class="hint">Applied to both this dashboard and the guest-facing menu.</div>
+        </div>
+
+        <div class="panel-box">
+          <h3>Manage Tags</h3>
+          <div class="tag-picker" id="tagManageList"></div>
+          <div class="tag-add-row">
+            <input type="text" id="newTagInput" placeholder="e.g. Vegan, Best Seller">
+            <button class="btn btn-sm" id="addTagBtn">+ Add Tag</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+      </section>
+
+      <!-- ---------- QR ---------- -->
+      <section id="view-qr" class="hidden">
+        <div class="qr-box">
+          <canvas id="qrCanvas"></canvas>
+          <div style="font-weight:800;margin-bottom:2px;" id="qrName">Gaia Lake Bungalow</div>
+          <div class="hint" style="margin-bottom:16px;">Scan to view menu</div>
+          <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-primary" id="downloadQrBtn">⬇ Download PNG</button>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:16px;max-width:400px;">
+          This QR points to <code id="qrUrlText"></code> — set in <code>config.js</code> as <code>GUEST_MENU_URL</code> once the guest menu is hosted.
+        </p>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ DISH MODAL ============ -->
+<div class="modal-backdrop" id="dishModalBackdrop">
+  <div class="modal">
+    <button class="modal-close" id="dishModalClose">×</button>
+    <h3 id="dishModalTitle">Add New Dish</h3>
+    <div class="field"><label>Photo</label>
+      <div class="dropzone" id="dishPhotoDrop"><div class="ph">📷</div><div class="hint">Click to upload (auto-converted to WebP)</div></div>
+      <input type="file" id="dishPhotoInput" accept="image/*" class="hidden">
+    </div>
+    <div class="field"><label>Category *</label><select id="dishCategory"></select></div>
+    <div class="field"><label>Dish Name *</label><input type="text" id="dishName"></div>
+    <div class="field"><label>Description</label><textarea id="dishDesc"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Price — LKR</label><input type="number" id="dishPriceLkr" min="0" step="1"></div>
+      <div class="field"><label>Price — USD (optional)</label><input type="number" id="dishPriceUsd" min="0" step="0.01"></div>
+    </div>
+    <div class="field"><label>Tags</label><div class="tag-picker" id="dishTagPicker"></div></div>
+    <div class="field" style="display:flex;align-items:center;gap:10px;">
+      <label class="switch"><input type="checkbox" id="dishActive" checked><span class="slider"></span></label>
+      <label style="margin:0;">Active (visible to guests)</label>
+    </div>
+    <div class="btn-row" style="margin-top:8px;justify-content:space-between;">
+      <button class="btn btn-danger hidden" id="deleteDishBtn">Delete Dish</button>
+      <div class="btn-row">
+        <button class="btn" id="cancelDishBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveDishBtn">Save Dish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CATEGORY MODAL ============ -->
+<div class="modal-backdrop" id="catModalBackdrop">
+  <div class="modal" style="max-width:380px;">
+    <button class="modal-close" id="catModalClose">×</button>
+    <h3 id="catModalTitle">Add Category</h3>
+    <div class="field"><label>Icon (emoji, optional)</label><input type="text" id="catIcon" maxlength="4" placeholder="🌅"></div>
+    <div class="field"><label>Category Name *</label><input type="text" id="catName" placeholder="Breakfast"></div>
+    <div class="btn-row" style="justify-content:space-between;">
+      <button class="btn btn-danger hidden" id="deleteCatBtn">Delete</button>
+      <div class="btn-row">
+        <button class="btn" id="cancelCatBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveCatBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+/* ==========================================================================
+   STATE
+   ========================================================================== */
+let accessToken = null;
+let tokenClient = null;
+let userEmail = null;
+let state = null;           // the full menu JSON
+let folderIds = { dishImages:null, backup:null, deleted:null };
+let editingDishId = null;
+let editingCatId = null;
+let dishPendingImageBlob = null;   // webp blob staged for upload on save
+let dishRemovedImage = false;
+let logoPendingBlob = null, bannerPendingBlob = null;
+
+const DEFAULT_STATE = () => ({
+  meta:{ appVersion:"1.0", updated:new Date().toISOString() },
+  profile:{ name:"Gaia Lake Bungalow", phone:"", city:"", country:"" },
+  settings:{ acceptingOrders:true, kitchenOpen:"06:00", kitchenClose:"23:00",
+             theme:{ primary: CONFIG.DEFAULT_THEME.primary, secondary: CONFIG.DEFAULT_THEME.secondary } },
+  categories:[], dishes:[], tags:["Popular","Chef's Special","Spicy"]
+});
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ==========================================================================
+   GOOGLE SIGN-IN
+   ========================================================================== */
+window.onload = () => {
+  if (!window.google || CONFIG.GOOGLE_CLIENT_ID.startsWith('PASTE_')){
+    document.getElementById('signinError').style.display='block';
+    document.getElementById('signinError').textContent = 'config.js is not set up yet — see SETUP.md.';
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.email',
+    callback: onTokenResponse
+  });
+  google.accounts.id.initialize({ client_id: CONFIG.GOOGLE_CLIENT_ID, callback: () => {} });
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-primary'; btn.textContent = 'Sign in with Google';
+  btn.style.width = '100%';
+  btn.onclick = () => tokenClient.requestAccessToken({ prompt: '' });
+  document.getElementById('gsiBtnHolder').appendChild(btn);
+};
+
+async function onTokenResponse(resp){
+  if (resp.error){ toast('Sign-in failed: ' + resp.error); return; }
+  accessToken = resp.access_token;
+  try{
+    const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    }).then(r=>r.json());
+    userEmail = info.email;
+  }catch(e){ userEmail = '(unknown)'; }
+
+  if (CONFIG.ADMIN_EMAILS.length && !CONFIG.ADMIN_EMAILS.includes(userEmail)){
+    document.getElementById('signinError').style.display='block';
+    document.getElementById('signinError').textContent =
+      `${userEmail} is not in ADMIN_EMAILS (config.js). Ask an existing admin to add you.`;
+    return;
+  }
+
+  document.getElementById('signinScreen').style.display='none';
+  document.getElementById('appShell').style.display='flex';
+  document.getElementById('whoAmI').textContent = userEmail;
+  await bootstrap();
+}
+
+document.getElementById('signOutBtn').onclick = () => {
+  if (accessToken) google.accounts.oauth2.revoke(accessToken, ()=>{});
+  location.reload();
+};
+
+/* ==========================================================================
+   DRIVE HELPERS
+   ========================================================================== */
+async function driveFetch(url, options={}, timeoutMs=20000){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    const res = await fetch(url, {
+      ...options,
+      signal: ctrl.signal,
+      headers: { Authorization: 'Bearer ' + accessToken, ...(options.headers||{}) }
+    });
+    if (!res.ok){
+      const body = await res.text().catch(()=> '');
+      throw new Error(`Drive API ${res.status}: ${body.slice(0,200)}`);
+    }
+    return res;
+  } finally { clearTimeout(timer); }
+}
+
+async function findChild(parentId, name, isFolder){
+  const mime = isFolder ? " and mimeType='application/vnd.google-apps.folder'" : "";
+  const q = encodeURIComponent(`'${parentId}' in parents and name='${name.replace(/'/g,"\\'")}' and trashed=false${mime}`);
+  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  const json = await res.json();
+  return json.files && json.files[0] ? json.files[0].id : null;
+}
+
+async function createJsonFile(parentId, name, obj){
+  const boundary = 'glboundary' + uid();
+  const metadata = { name, parents:[parentId], mimeType:'application/json' };
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(obj)}\r\n--${boundary}--`;
+  const res = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method:'POST',
+    headers:{ 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body
+  });
+  return (await res.json()).id;
+}
+
+async function updateJsonFile(fileId, obj){
+  await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method:'PATCH',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify(obj)
+  });
+}
+
+async function downloadJsonFile(fileId){
+  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  return res.json();
+}
+
+async function uploadImageBlob(parentId, blob, filename){
+  const boundary = 'glboundary' + uid();
+  const metadata = { name: filename, parents:[parentId], mimeType: blob.type || 'image/webp' };
+  const pre = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+              `--${boundary}\r\nContent-Type: ${blob.type || 'image/webp'}\r\n\r\n`;
+  const post = `\r\n--${boundary}--`;
+  const body = new Blob([pre, blob, post]);
+  const res = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method:'POST',
+    headers:{ 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body
+  });
+  // Make the uploaded photo viewable by anyone with the link (it lives in the
+  // guest-readable DishImages folder, but permissions are set per-file too).
+  const id = (await res.json()).id;
+  try{
+    await driveFetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ role:'reader', type:'anyone' })
+    });
+  }catch(e){ console.warn('Could not set public permission on image (folder-level sharing may already cover it):', e); }
+  return id;
+}
+
+async function moveFile(fileId, fromParent, toParent){
+  await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${toParent}&removeParents=${fromParent}`, { method:'PATCH' });
+}
+async function trashFile(fileId){
+  await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ trashed:true })
+  });
+}
+
+/* ==========================================================================
+   BOOTSTRAP — resolve folders + menu file, load state
+   ========================================================================== */
+async function bootstrap(){
+  document.getElementById('syncStatus').textContent = 'Connecting to Drive…';
+  try{
+    folderIds.dishImages = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.DISH_IMAGES_FOLDER_NAME, true);
+    folderIds.backup     = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.BACKUP_FOLDER_NAME, true);
+    folderIds.deleted    = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.DELETED_IMAGES_FOLDER_NAME, true);
+
+    if (!folderIds.dishImages || !folderIds.backup || !folderIds.deleted){
+      toast('Some subfolders (DishImages / Backup / Deleted Images) were not found by name — check they exist in GuestView.');
+    }
+
+    let menuFileId = CONFIG.MENU_FILE_ID;
+    if (!menuFileId){
+      menuFileId = await findChild(CONFIG.GUEST_FOLDER_ID, 'gaia_lake_menu.json', false);
+    }
+    if (!menuFileId){
+      state = DEFAULT_STATE();
+      menuFileId = await createJsonFile(CONFIG.GUEST_FOLDER_ID, 'gaia_lake_menu.json', state);
+      toast('Created a new menu file on Drive.');
+    } else {
+      state = await downloadJsonFile(menuFileId);
+    }
+    CONFIG.MENU_FILE_ID = menuFileId;
+
+    document.getElementById('syncStatus').innerHTML =
+      `Connected. Menu file ID: <code>${menuFileId}</code><br>` +
+      (CONFIG.MENU_FILE_ID !== menuFileId ? '' : `<span style="color:var(--danger)">If this ID is not already in config.js, copy it into MENU_FILE_ID in BOTH admin.html's and guest-menu.html's config.js.</span>`);
+
+    applyTheme();
+    renderAll();
+  }catch(err){
+    console.error(err);
+    document.getElementById('syncStatus').textContent = 'Connection failed: ' + err.message;
+    toast('Could not connect to Drive — see Dashboard for details.');
+  }
+}
+
+let saveTimer = null;
+async function persist(showToast=true){
+  state.meta.updated = new Date().toISOString();
+  try{
+    // rotate a timestamped backup before overwriting (best-effort, non-blocking of the main save)
+    if (folderIds.backup){
+      createJsonFile(folderIds.backup, `menu-backup-${Date.now()}.json`, state).catch(()=>{});
+    }
+    await updateJsonFile(CONFIG.MENU_FILE_ID, state);
+    if (showToast) toast('Saved.');
+  }catch(err){
+    console.error(err);
+    toast('Save failed: ' + err.message);
+  }
+}
+
+/* ==========================================================================
+   THEME
+   ========================================================================== */
+function applyTheme(){
+  const t = state.settings.theme || CONFIG.DEFAULT_THEME;
+  document.documentElement.style.setProperty('--brand-1', t.primary);
+  document.documentElement.style.setProperty('--brand-2', t.secondary);
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+document.querySelectorAll('.navitem[data-view]').forEach(btn=>{
+  btn.onclick = () => {
+    document.querySelectorAll('.navitem[data-view]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('[id^="view-"]').forEach(v=>v.classList.add('hidden'));
+    document.getElementById('view-' + btn.dataset.view).classList.remove('hidden');
+    document.getElementById('viewTitle').textContent = btn.textContent.trim();
+    document.getElementById('sidebar').classList.remove('open');
+    if (btn.dataset.view === 'qr') renderQr();
+  };
+});
+document.getElementById('menuBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
+
+/* ==========================================================================
+   IMAGE → WEBP HELPER
+   ========================================================================== */
+async function fileToWebp(file, maxDim=1600, quality=0.82){
+  const bitmap = await createImageBitmap(file);
+  let { width, height } = bitmap;
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  width = Math.round(width * scale); height = Math.round(height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+}
+function dropzoneHandler(dropEl, inputEl, onFile){
+  dropEl.onclick = () => inputEl.click();
+  inputEl.onchange = async () => {
+    if (!inputEl.files[0]) return;
+    const blob = await fileToWebp(inputEl.files[0]);
+    const url = URL.createObjectURL(blob);
+    dropEl.innerHTML = `<img src="${url}">`;
+    onFile(blob);
+  };
+}
+
+/* ==========================================================================
+   RENDER — DASHBOARD
+   ========================================================================== */
+function renderDashboard(){
+  document.getElementById('statCats').textContent = state.categories.length;
+  document.getElementById('statDishes').textContent = state.dishes.length;
+  document.getElementById('statActive').textContent = state.dishes.filter(d=>d.active!==false).length;
+  document.getElementById('statPhotos').textContent = state.dishes.filter(d=>d.imageFileId).length;
+  document.getElementById('dashAcceptToggle').checked = state.settings.acceptingOrders !== false;
+  document.getElementById('dashAcceptLabel').textContent = state.settings.acceptingOrders !== false
+    ? `Open ${state.settings.kitchenOpen}–${state.settings.kitchenClose} (Sri Lanka time)` : 'Paused — guests see "Currently Closed"';
+}
+document.getElementById('dashAcceptToggle').onchange = async (e) => {
+  state.settings.acceptingOrders = e.target.checked;
+  renderDashboard();
+  await persist();
+};
+document.getElementById('refreshBtn').onclick = async () => {
+  state = await downloadJsonFile(CONFIG.MENU_FILE_ID);
+  applyTheme(); renderAll(); toast('Refreshed from Drive.');
+};
+
+/* ==========================================================================
+   RENDER — CATEGORIES
+   ========================================================================== */
+function renderCategories(){
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  state.categories.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((cat,i)=>{
+    const count = state.dishes.filter(d=>d.categoryId===cat.id).length;
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `
+      <span class="icon-in">${cat.icon||'🍽️'}</span>
+      <span class="name">${cat.name}</span>
+      <span class="count">${count} item${count===1?'':'s'}</span>
+      <div class="order-btns">
+        <button ${i===0?'disabled':''} data-dir="-1">▲</button>
+        <button ${i===state.categories.length-1?'disabled':''} data-dir="1">▼</button>
+      </div>
+      <button class="btn btn-sm" data-edit>Edit</button>`;
+    row.querySelectorAll('[data-dir]').forEach(b=>{
+      b.onclick = async () => {
+        const dir = parseInt(b.dataset.dir);
+        const idx = state.categories.findIndex(c=>c.id===cat.id);
+        const swap = state.categories[idx+dir];
+        if (!swap) return;
+        const tmp = swap.order; swap.order = cat.order; cat.order = tmp;
+        renderCategories(); renderDishSection(); await persist(false);
+      };
+    });
+    row.querySelector('[data-edit]').onclick = () => openCatModal(cat);
+    list.appendChild(row);
+  });
+  // keep select + filter pills in sync
+  const sel = document.getElementById('dishCategory');
+  sel.innerHTML = state.categories.map(c=>`<option value="${c.id}">${c.icon||''} ${c.name}</option>`).join('');
+}
+
+document.getElementById('addCatBtn').onclick = () => openCatModal(null);
+function openCatModal(cat){
+  editingCatId = cat ? cat.id : null;
+  document.getElementById('catModalTitle').textContent = cat ? 'Edit Category' : 'Add Category';
+  document.getElementById('catIcon').value = cat ? (cat.icon||'') : '';
+  document.getElementById('catName').value = cat ? cat.name : '';
+  document.getElementById('deleteCatBtn').classList.toggle('hidden', !cat);
+  document.getElementById('catModalBackdrop').classList.add('open');
+}
+function closeCatModal(){ document.getElementById('catModalBackdrop').classList.remove('open'); }
+document.getElementById('catModalClose').onclick = closeCatModal;
+document.getElementById('cancelCatBtn').onclick = closeCatModal;
+document.getElementById('saveCatBtn').onclick = async () => {
+  const name = document.getElementById('catName').value.trim();
+  if (!name){ toast('Category name is required.'); return; }
+  const icon = document.getElementById('catIcon').value.trim();
+  if (editingCatId){
+    const c = state.categories.find(c=>c.id===editingCatId);
+    c.name = name; c.icon = icon;
+  } else {
+    state.categories.push({ id: uid(), name, icon, order: state.categories.length });
+  }
+  closeCatModal(); renderCategories(); renderDishSection();
+  await persist();
+};
+document.getElementById('deleteCatBtn').onclick = async () => {
+  const inUse = state.dishes.filter(d=>d.categoryId===editingCatId).length;
+  if (inUse && !confirm(`${inUse} dish(es) use this category. Delete the category anyway? Those dishes will stay but lose their category.`)) return;
+  state.categories = state.categories.filter(c=>c.id!==editingCatId);
+  closeCatModal(); renderCategories(); renderDishSection();
+  await persist();
+};
+
+/* ==========================================================================
+   RENDER — DISHES
+   ========================================================================== */
+let activeDishFilter = 'all';
+function renderDishSection(){
+  const filterEl = document.getElementById('dishCatFilter');
+  filterEl.innerHTML = `<button class="cat-pill ${activeDishFilter==='all'?'active':''}" data-f="all">All (${state.dishes.length})</button>` +
+    state.categories.map(c=>{
+      const n = state.dishes.filter(d=>d.categoryId===c.id).length;
+      return `<button class="cat-pill ${activeDishFilter===c.id?'active':''}" data-f="${c.id}">${c.icon||''} ${c.name} (${n})</button>`;
+    }).join('');
+  filterEl.querySelectorAll('[data-f]').forEach(b=>{
+    b.onclick = () => { activeDishFilter = b.dataset.f; renderDishSection(); };
+  });
+
+  const grid = document.getElementById('dishGrid');
+  const items = state.dishes.filter(d => activeDishFilter==='all' || d.categoryId===activeDishFilter);
+  grid.innerHTML = items.map(d=>{
+    const cat = state.categories.find(c=>c.id===d.categoryId);
+    const thumb = d.imageFileId
+      ? `<img class="thumb" src="https://drive.google.com/thumbnail?id=${d.imageFileId}&sz=w400">`
+      : `<div class="thumb-ph">🍽️</div>`;
+    const price = [d.price?.lkr?`LKR ${d.price.lkr}`:'', d.price?.usd?`$${d.price.usd}`:''].filter(Boolean).join(' · ');
+    return `<div class="dish-card">
+      ${thumb}
+      <div class="body">
+        <div class="name-row"><span class="name">${d.name}</span><span class="price">${price}</span></div>
+        <div class="hint">${cat ? (cat.icon||'')+' '+cat.name : '—'} ${d.active===false?'<span class=\"inactive-badge\">· Hidden</span>':''}</div>
+        <div class="tags">${(d.tags||[]).map(t=>`<span class="tag-chip selected">${t}</span>`).join('')}</div>
+        <div class="actions"><button class="btn btn-sm" data-edit="${d.id}">Edit</button></div>
+      </div>
+    </div>`;
+  }).join('') || '<p class="hint">No dishes yet.</p>';
+  grid.querySelectorAll('[data-edit]').forEach(b=>{
+    b.onclick = () => openDishModal(state.dishes.find(d=>d.id===b.dataset.edit));
+  });
+}
+
+document.getElementById('addDishBtn').onclick = () => openDishModal(null);
+function renderTagPicker(container, selectedTags){
+  container.innerHTML = state.tags.map(t=>
+    `<span class="tag-chip ${selectedTags.includes(t)?'selected':''}" data-tag="${t}">${t}</span>`
+  ).join('');
+  container.querySelectorAll('[data-tag]').forEach(chip=>{
+    chip.onclick = () => {
+      const t = chip.dataset.tag;
+      const i = selectedTags.indexOf(t);
+      if (i>-1) selectedTags.splice(i,1); else selectedTags.push(t);
+      chip.classList.toggle('selected');
+    };
+  });
+}
+let dishSelectedTags = [];
+function openDishModal(dish){
+  editingDishId = dish ? dish.id : null;
+  dishPendingImageBlob = null; dishRemovedImage = false;
+  document.getElementById('dishModalTitle').textContent = dish ? 'Edit Dish' : 'Add New Dish';
+  document.getElementById('dishName').value = dish ? dish.name : '';
+  document.getElementById('dishDesc').value = dish ? (dish.description||'') : '';
+  document.getElementById('dishPriceLkr').value = dish?.price?.lkr ?? '';
+  document.getElementById('dishPriceUsd').value = dish?.price?.usd ?? '';
+  document.getElementById('dishCategory').value = dish ? dish.categoryId : (state.categories[0]?.id||'');
+  document.getElementById('dishActive').checked = dish ? dish.active !== false : true;
+  document.getElementById('deleteDishBtn').classList.toggle('hidden', !dish);
+  dishSelectedTags = dish ? [...(dish.tags||[])] : [];
+  renderTagPicker(document.getElementById('dishTagPicker'), dishSelectedTags);
+  const drop = document.getElementById('dishPhotoDrop');
+  drop.innerHTML = dish?.imageFileId
+    ? `<img src="https://drive.google.com/thumbnail?id=${dish.imageFileId}&sz=w400">`
+    : `<div class="ph">📷</div><div class="hint">Click to upload (auto-converted to WebP)</div>`;
+  document.getElementById('dishModalBackdrop').classList.add('open');
+}
+function closeDishModal(){ document.getElementById('dishModalBackdrop').classList.remove('open'); }
+document.getElementById('dishModalClose').onclick = closeDishModal;
+document.getElementById('cancelDishBtn').onclick = closeDishModal;
+dropzoneHandler(document.getElementById('dishPhotoDrop'), document.getElementById('dishPhotoInput'), blob => { dishPendingImageBlob = blob; });
+
+document.getElementById('saveDishBtn').onclick = async () => {
+  const name = document.getElementById('dishName').value.trim();
+  if (!name){ toast('Dish name is required.'); return; }
+  const categoryId = document.getElementById('dishCategory').value;
+  if (!categoryId){ toast('Add a category first.'); return; }
+
+  let dish = editingDishId ? state.dishes.find(d=>d.id===editingDishId) : { id: uid(), order: state.dishes.length };
+  dish.name = name;
+  dish.description = document.getElementById('dishDesc').value.trim();
+  dish.categoryId = categoryId;
+  dish.active = document.getElementById('dishActive').checked;
+  dish.tags = [...dishSelectedTags];
+  const lkr = document.getElementById('dishPriceLkr').value;
+  const usd = document.getElementById('dishPriceUsd').value;
+  dish.price = { lkr: lkr ? Number(lkr) : undefined, usd: usd ? Number(usd) : undefined };
+
+  if (!editingDishId) state.dishes.push(dish);
+
+  if (dishPendingImageBlob && folderIds.dishImages){
+    toast('Uploading photo…');
+    try{
+      const oldImage = dish.imageFileId;
+      dish.imageFileId = await uploadImageBlob(folderIds.dishImages, dishPendingImageBlob, `${dish.id}-${Date.now()}.webp`);
+      if (oldImage && folderIds.deleted) moveFile(oldImage, folderIds.dishImages, folderIds.deleted).catch(()=>{});
+    }catch(err){ toast('Photo upload failed: ' + err.message); }
+  }
+
+  closeDishModal(); renderDishSection(); renderCategories();
+  await persist();
+};
+document.getElementById('deleteDishBtn').onclick = async () => {
+  if (!confirm('Delete this dish? This cannot be undone.')) return;
+  const dish = state.dishes.find(d=>d.id===editingDishId);
+  if (dish?.imageFileId && folderIds.deleted && folderIds.dishImages){
+    moveFile(dish.imageFileId, folderIds.dishImages, folderIds.deleted).catch(()=>{});
+  }
+  state.dishes = state.dishes.filter(d=>d.id!==editingDishId);
+  closeDishModal(); renderDishSection(); renderCategories();
+  await persist();
+};
+
+/* ==========================================================================
+   PROFILE
+   ========================================================================== */
+function renderProfile(){
+  const p = state.profile;
+  document.getElementById('pName').value = p.name||'';
+  document.getElementById('pPhone').value = p.phone||'';
+  document.getElementById('pCity').value = p.city||'';
+  document.getElementById('pCountry').value = p.country||'';
+  document.getElementById('logoDrop').innerHTML = p.logoFileId
+    ? `<img src="https://drive.google.com/thumbnail?id=${p.logoFileId}&sz=w300">` : `<div class="ph">🖼️</div><div class="hint">Click to upload logo</div>`;
+  document.getElementById('bannerDrop').innerHTML = p.bannerFileId
+    ? `<img src="https://drive.google.com/thumbnail?id=${p.bannerFileId}&sz=w600">` : `<div class="ph">🖼️</div><div class="hint">Click to upload banner</div>`;
+}
+dropzoneHandler(document.getElementById('logoDrop'), document.getElementById('logoInput'), blob => logoPendingBlob = blob);
+dropzoneHandler(document.getElementById('bannerDrop'), document.getElementById('bannerInput'), blob => bannerPendingBlob = blob);
+
+document.getElementById('saveProfileBtn').onclick = async () => {
+  state.profile.name = document.getElementById('pName').value.trim();
+  state.profile.phone = document.getElementById('pPhone').value.trim();
+  state.profile.city = document.getElementById('pCity').value.trim();
+  state.profile.country = document.getElementById('pCountry').value.trim();
+
+  const uploadTo = folderIds.dishImages || CONFIG.GUEST_FOLDER_ID;
+  if (logoPendingBlob){
+    toast('Uploading logo…');
+    state.profile.logoFileId = await uploadImageBlob(uploadTo, logoPendingBlob, `logo-${Date.now()}.webp`);
+    logoPendingBlob = null;
+  }
+  if (bannerPendingBlob){
+    toast('Uploading banner…');
+    state.profile.bannerFileId = await uploadImageBlob(uploadTo, bannerPendingBlob, `banner-${Date.now()}.webp`);
+    bannerPendingBlob = null;
+  }
+  await persist();
+  renderProfile();
+};
+
+/* ==========================================================================
+   SETTINGS
+   ========================================================================== */
+function renderSettings(){
+  document.getElementById('settAcceptToggle').checked = state.settings.acceptingOrders !== false;
+  document.getElementById('kitchenOpen').value = state.settings.kitchenOpen || '06:00';
+  document.getElementById('kitchenClose').value = state.settings.kitchenClose || '23:00';
+  document.getElementById('colorPrimary').value = state.settings.theme.primary;
+  document.getElementById('colorSecondary').value = state.settings.theme.secondary;
+  document.getElementById('colorPrimaryHex').textContent = state.settings.theme.primary;
+  document.getElementById('colorSecondaryHex').textContent = state.settings.theme.secondary;
+  renderTagPicker(document.getElementById('tagManageList'), []); // display-only list below
+  document.getElementById('tagManageList').innerHTML = state.tags.map(t=>
+    `<span class="tag-chip selected">${t} <span data-del="${t}" style="cursor:pointer;margin-left:4px;">×</span></span>`
+  ).join('');
+  document.getElementById('tagManageList').querySelectorAll('[data-del]').forEach(x=>{
+    x.onclick = async () => {
+      state.tags = state.tags.filter(t=>t!==x.dataset.del);
+      renderSettings();
+      await persist(false);
+    };
+  });
+}
+document.getElementById('colorPrimary').oninput = e => { document.getElementById('colorPrimaryHex').textContent = e.target.value; document.documentElement.style.setProperty('--brand-1', e.target.value); };
+document.getElementById('colorSecondary').oninput = e => { document.getElementById('colorSecondaryHex').textContent = e.target.value; document.documentElement.style.setProperty('--brand-2', e.target.value); };
+document.getElementById('addTagBtn').onclick = async () => {
+  const v = document.getElementById('newTagInput').value.trim();
+  if (!v) return;
+  if (!state.tags.includes(v)) state.tags.push(v);
+  document.getElementById('newTagInput').value = '';
+  renderSettings();
+  await persist(false);
+};
+document.getElementById('saveSettingsBtn').onclick = async () => {
+  state.settings.acceptingOrders = document.getElementById('settAcceptToggle').checked;
+  state.settings.kitchenOpen = document.getElementById('kitchenOpen').value;
+  state.settings.kitchenClose = document.getElementById('kitchenClose').value;
+  state.settings.theme = {
+    primary: document.getElementById('colorPrimary').value,
+    secondary: document.getElementById('colorSecondary').value
+  };
+  applyTheme();
+  await persist();
+  renderDashboard();
+};
+
+/* ==========================================================================
+   QR CODE
+   ========================================================================== */
+function renderQr(){
+  document.getElementById('qrName').textContent = state.profile.name || CONFIG.RESTAURANT_NAME_FALLBACK;
+  document.getElementById('qrUrlText').textContent = CONFIG.GUEST_MENU_URL;
+  if (window.QRCode){
+    QRCode.toCanvas(document.getElementById('qrCanvas'), CONFIG.GUEST_MENU_URL, { width:220, margin:1,
+      color:{ dark: state.settings.theme.primary, light:'#ffffff' } });
+  }
+}
+document.getElementById('downloadQrBtn').onclick = () => {
+  const canvas = document.getElementById('qrCanvas');
+  const a = document.createElement('a');
+  a.download = 'gaia-lake-menu-qr.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+};
+
+/* ==========================================================================
+   INIT-ALL
+   ========================================================================== */
+function renderAll(){
+  renderDashboard();
+  renderCategories();
+  renderDishSection();
+  renderProfile();
+  renderSettings();
+}
+</script>
+</body>
+</html>
