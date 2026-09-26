@@ -77,6 +77,17 @@ value in `config.js`.
    the resulting root address, then open **Admin → QR Code** to generate
    and download the print-ready QR code.
 
+## Opening the admin dashboard
+
+Once hosted, `admin.html` isn't linked from anywhere on the guest menu (by
+design — guests should never stumble onto it). Bookmark its direct URL:
+
+```
+https://gaialakemanager.github.io/GaiaLakeMenu/admin.html
+```
+
+(Your public guest menu is the same path without `admin.html` at the end.)
+
 ## 7. Add admin accounts
 
 Edit `ADMIN_EMAILS` in `config.js`:

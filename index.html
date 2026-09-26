@@ -23,9 +23,10 @@ img{max-width:100%;}
 
 /* ---------- header ---------- */
 header{position:relative;padding-top:env(safe-area-inset-top,0px);background:var(--cream);}
-.banner-wrap{position:relative;width:100%;aspect-ratio:16/6.2;min-height:120px;background:linear-gradient(135deg,#eef7ee,#e4f3fb);overflow:hidden;}
+.head-top{position:relative;}
+.banner-wrap{width:100%;aspect-ratio:16/3.1;min-height:70px;background:linear-gradient(135deg,#eef7ee,#e4f3fb);overflow:hidden;}
 .banner-wrap img.banner{width:100%;height:100%;object-fit:cover;display:block;}
-.head-overlay{position:absolute;left:14px;right:14px;bottom:-30px;display:flex;align-items:flex-end;gap:12px;}
+.head-overlay{position:absolute;left:14px;right:14px;bottom:-28px;display:flex;align-items:flex-end;gap:12px;}
 .logo-sm{width:60px;height:60px;border-radius:14px;object-fit:cover;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);flex:0 0 auto;}
 .logo-sm.placeholder{display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--brand-1);}
 .head-text{padding-bottom:4px;min-width:0;}
@@ -89,7 +90,7 @@ nav{position:sticky;top:0;z-index:10;background:var(--cream);border-bottom:1px s
 @keyframes spin{to{transform:rotate(360deg);}}
 
 footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.85rem;line-height:1.7;}
-.dev-footer{background:var(--brand-1);color:#fff;text-align:center;font-size:.8rem;
+.dev-footer{background:var(--brand-1);color:#fff;text-align:center;font-size:10px;
   padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));letter-spacing:.01em;}
 
 /* ---------- dark mode ---------- */
@@ -105,8 +106,8 @@ footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.
 
 <header id="header">
   <button class="mode-toggle" id="modeToggle" title="Toggle dark / light mode" aria-label="Toggle dark or light mode">🌙</button>
-  <div class="banner-wrap" id="bannerWrap"><img class="banner" id="bannerImg" style="display:none"></div>
-  <div id="headBody">
+  <div class="head-top" id="headTop">
+    <div class="banner-wrap" id="bannerWrap"><img class="banner" id="bannerImg" style="display:none"></div>
     <div class="head-overlay" id="headOverlay">
       <div class="logo-sm placeholder" id="logoImg">🍃</div>
       <div class="head-text">
@@ -194,14 +195,13 @@ function render(data){
   const loc = [profile.city, profile.country].filter(Boolean).join(', ');
   document.getElementById('restLoc').textContent = loc;
 
-  const headBody = document.getElementById('headBody');
+  const headTop = document.getElementById('headTop');
   const bannerImg = document.getElementById('bannerImg');
   if (profile.bannerFileId){
     bannerImg.src = driveImageUrl(profile.bannerFileId, 1200);
     bannerImg.style.display = 'block';
   } else {
-    headBody.classList.add('no-banner');
-    document.getElementById('bannerWrap').classList.add('no-banner');
+    headTop.classList.add('no-banner');
   }
   if (profile.logoFileId){
     const holder = document.getElementById('logoImg');
