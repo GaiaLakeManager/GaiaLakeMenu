@@ -1,6 +1,7 @@
 /* ==========================================================================
    Gaia Lake Bungalow — Digital Menu System
-   Shared configuration — loaded by BOTH admin.html and guest-menu.html
+   Shared configuration — loaded by BOTH admin.html and the public guest menu
+   page (index.html on GitHub Pages, so it serves at your repo's root URL).
    ==========================================================================
    Nothing in this file is a secret. A Google API key and OAuth Client ID
    for a browser-only app are meant to be public (real access control is
@@ -30,16 +31,16 @@ const CONFIG = {
   DELETED_IMAGES_FOLDER_NAME: "Deleted Images",// admin-only, soft-deleted photos
 
   // Google account(s) allowed to sign in and edit the menu.
-  // Add your Gmail/Workspace address(es) here, e.g. ["gaialakewebapps@gmail.com"].
+  // Add your Gmail/Workspace address(es) here, e.g. ["you@gmail.com"].
   ADMIN_EMAILS: ["priyagaialake@gmail.com","gaialakewebapps@gmail.com"],
 
   // Default two-tone brand palette. Editable later from Admin → Settings;
   // this is only the fallback used before any settings are saved.
   DEFAULT_THEME: { primary: "#4C9D38", secondary: "#1E9BD7" },
 
-  // Public URL of guest-menu.html once hosted (used to generate the QR code).
-  // Update this after you publish to GitHub Pages.
-  GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html",
+  // Public URL of the guest menu once hosted (used to generate the QR code).
+  // If it's named index.html, the /index.html suffix is optional.
+  GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
   RESTAURANT_NAME_FALLBACK: "Gaia Lake Bungalow"
 };

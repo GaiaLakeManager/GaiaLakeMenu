@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
 :root{
   --brand-1:#4C9D38; --brand-2:#1E9BD7;
@@ -38,8 +37,9 @@ a{color:inherit;}
 .sidebar{width:236px;flex:0 0 auto;background:var(--panel);border-right:1px solid var(--line);
   padding:18px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;}
-.brand .mark{width:32px;height:32px;border-radius:9px;background:var(--brand-1);color:#fff;
+.brand .mark{width:32px;height:32px;border-radius:9px;background:var(--brand-1);color:#fff;overflow:hidden;
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex:0 0 auto;}
+.brand .mark img{width:100%;height:100%;object-fit:cover;}
 .brand .txt{font-weight:800;font-size:.95rem;line-height:1.2;}
 .brand .txt small{display:block;font-weight:500;font-size:.7rem;color:var(--ink-soft);}
 .navitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:2px;
@@ -148,7 +148,8 @@ a{color:inherit;}
 
 /* ---------------- QR ---------------- */
 .qr-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;text-align:center;max-width:340px;}
-#qrCanvas{margin:0 auto 14px;}
+#qrImgHolder{margin:0 auto 14px;display:flex;justify-content:center;}
+#qrImgHolder img{border-radius:10px;}
 
 /* ---------------- toast ---------------- */
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1b231c;color:#fff;
@@ -176,7 +177,7 @@ a{color:inherit;}
 <div id="appShell" class="app-flex">
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="mark">GL</div>
+      <div class="mark" id="sidebarMark">GL</div>
       <div class="txt">Gaia Lake<small>Menu Admin</small></div>
     </div>
     <button class="navitem active" data-view="dashboard"><span class="ic">📊</span> Dashboard</button>
@@ -306,13 +307,19 @@ a{color:inherit;}
           </div>
         </div>
 
+        <div class="panel-box">
+          <h3>App Version</h3>
+          <div class="field" style="max-width:160px;"><label>Shown in the guest menu footer</label><input type="text" id="appVersionField" placeholder="1.0"></div>
+          <div class="hint">Minor/patch changes: +0.1 (e.g. 1.0 → 1.1). Major changes: +1.0 (e.g. 1.9 → 2.0).</div>
+        </div>
+
         <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
       </section>
 
       <!-- ---------- QR ---------- -->
       <section id="view-qr" class="hidden">
         <div class="qr-box">
-          <canvas id="qrCanvas"></canvas>
+          <div id="qrImgHolder"></div>
           <div style="font-weight:800;margin-bottom:2px;" id="qrName">Gaia Lake Bungalow</div>
           <div class="hint" style="margin-bottom:16px;">Scan to view menu</div>
           <div class="btn-row" style="justify-content:center;">
@@ -577,7 +584,7 @@ async function bootstrap(){
 
     document.getElementById('syncStatus').innerHTML =
       `Connected. Menu file ID: <code>${menuFileId}</code><br>` +
-      (CONFIG.MENU_FILE_ID !== menuFileId ? '' : `<span style="color:var(--danger)">If this ID is not already in config.js, copy it into MENU_FILE_ID in BOTH admin.html's and guest-menu.html's config.js.</span>`);
+      (CONFIG.MENU_FILE_ID !== menuFileId ? '' : `<span style="color:var(--danger)">If this ID is not already in config.js, copy it into MENU_FILE_ID in the config.js used by BOTH this admin page and the public guest menu page.</span>`);
 
     applyTheme();
     renderAll();
@@ -899,6 +906,7 @@ document.getElementById('saveProfileBtn').onclick = async () => {
   }
   await persist();
   renderProfile();
+  renderBrand();
 };
 
 /* ==========================================================================
@@ -912,6 +920,7 @@ function renderSettings(){
   document.getElementById('colorSecondary').value = state.settings.theme.secondary;
   document.getElementById('colorPrimaryHex').textContent = state.settings.theme.primary;
   document.getElementById('colorSecondaryHex').textContent = state.settings.theme.secondary;
+  document.getElementById('appVersionField').value = state.meta.appVersion || '1.0';
   renderTagPicker(document.getElementById('tagManageList'), []); // display-only list below
   document.getElementById('tagManageList').innerHTML = state.tags.map(t=>
     `<span class="tag-chip selected">${t} <span data-del="${t}" style="cursor:pointer;margin-left:4px;">×</span></span>`
@@ -942,6 +951,7 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
     primary: document.getElementById('colorPrimary').value,
     secondary: document.getElementById('colorSecondary').value
   };
+  state.meta.appVersion = document.getElementById('appVersionField').value.trim() || state.meta.appVersion;
   applyTheme();
   await persist();
   renderDashboard();
@@ -950,31 +960,46 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
 /* ==========================================================================
    QR CODE
    ========================================================================== */
+function qrImageUrl(size){
+  const color = (state.settings.theme.primary || '#000000').replace('#','');
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=${color}&bgcolor=ffffff&data=${encodeURIComponent(CONFIG.GUEST_MENU_URL)}`;
+}
 function renderQr(){
   document.getElementById('qrName').textContent = state.profile.name || CONFIG.RESTAURANT_NAME_FALLBACK;
   document.getElementById('qrUrlText').textContent = CONFIG.GUEST_MENU_URL;
-  if (window.QRCode){
-    QRCode.toCanvas(document.getElementById('qrCanvas'), CONFIG.GUEST_MENU_URL, { width:220, margin:1,
-      color:{ dark: state.settings.theme.primary, light:'#ffffff' } });
-  }
+  document.getElementById('qrImgHolder').innerHTML = `<img src="${qrImageUrl(240)}" width="220" height="220" alt="Menu QR code">`;
 }
-document.getElementById('downloadQrBtn').onclick = () => {
-  const canvas = document.getElementById('qrCanvas');
-  const a = document.createElement('a');
-  a.download = 'gaia-lake-menu-qr.png';
-  a.href = canvas.toDataURL('image/png');
-  a.click();
+document.getElementById('downloadQrBtn').onclick = async () => {
+  const url = qrImageUrl(600); // higher-res for printing
+  try{
+    const blob = await fetch(url).then(r=>r.blob());
+    const a = document.createElement('a');
+    a.download = 'gaia-lake-menu-qr.png';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+  }catch(err){
+    toast('Direct download blocked — opening the QR image in a new tab, right-click it → Save Image.');
+    window.open(url, '_blank');
+  }
 };
 
 /* ==========================================================================
    INIT-ALL
    ========================================================================== */
+function renderBrand(){
+  const mark = document.getElementById('sidebarMark');
+  mark.innerHTML = state.profile.logoFileId
+    ? `<img src="https://drive.google.com/thumbnail?id=${state.profile.logoFileId}&sz=w100">`
+    : 'GL';
+}
+
 function renderAll(){
   renderDashboard();
   renderCategories();
   renderDishSection();
   renderProfile();
   renderSettings();
+  renderBrand();
 }
 </script>
 </body>
