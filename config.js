@@ -39,7 +39,7 @@ const CONFIG = {
 
   // Public URL of guest-menu.html once hosted (used to generate the QR code).
   // Update this after you publish to GitHub Pages.
-  GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/guest-menu.html",
+  GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html",
 
   RESTAURANT_NAME_FALLBACK: "Gaia Lake Bungalow"
 };
