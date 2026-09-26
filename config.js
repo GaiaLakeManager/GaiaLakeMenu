@@ -31,7 +31,7 @@ const CONFIG = {
 
   // Google account(s) allowed to sign in and edit the menu.
   // Add your Gmail/Workspace address(es) here, e.g. ["gaialakewebapps@gmail.com"].
-  ADMIN_EMAILS: [gaialakewebapps@gmail.com],
+  ADMIN_EMAILS: ["priyagaialake@gmail.com","gaialakewebapps@gmail.com"],
 
   // Default two-tone brand palette. Editable later from Admin → Settings;
   // this is only the fallback used before any settings are saved.
