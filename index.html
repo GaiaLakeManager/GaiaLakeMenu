@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gaia Lake Bungalow — Menu</title>
+<title>Gaia Lake - Kandalama — Menu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -26,15 +26,17 @@ header{position:relative;padding-top:env(safe-area-inset-top,0px);background:var
 .head-top{position:relative;}
 .banner-wrap{width:100%;aspect-ratio:16/3.1;min-height:70px;background:linear-gradient(135deg,#eef7ee,#e4f3fb);overflow:hidden;}
 .banner-wrap img.banner{width:100%;height:100%;object-fit:cover;display:block;}
-.head-overlay{position:absolute;left:14px;right:14px;bottom:-28px;display:flex;align-items:flex-end;gap:12px;}
+.head-overlay{position:absolute;left:0;right:0;bottom:-28px;max-width:980px;margin:0 auto;padding:0 14px;display:flex;justify-content:center;}
+.head-badge{display:flex;align-items:center;gap:12px;background:rgba(10,22,15,.4);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:6px 18px 6px 6px;border-radius:999px;}
 .logo-sm{width:60px;height:60px;border-radius:14px;object-fit:cover;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);flex:0 0 auto;}
 .logo-sm.placeholder{display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--brand-1);}
-.head-text{padding-bottom:4px;min-width:0;}
+.head-text{padding-bottom:0;min-width:0;}
 .head-text h1{font-size:1.35rem;font-weight:600;margin:0;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35);line-height:1.15;}
 .head-text .loc{font-size:.82rem;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.3);margin:2px 0 0;}
+.no-banner .head-badge{background:none;backdrop-filter:none;padding:0;}
 .no-banner .head-text h1{color:var(--brand-1);text-shadow:none;}
 .no-banner .head-text .loc{color:var(--ink-soft);text-shadow:none;}
-.no-banner .head-overlay{position:static;margin:14px 14px 0;}
+.no-banner .head-overlay{position:static;margin:14px auto 0;}
 .no-banner .banner-wrap{display:none;}
 
 .mode-toggle{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:6;
@@ -42,6 +44,7 @@ header{position:relative;padding-top:env(safe-area-inset-top,0px);background:var
   display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,.15);}
 
 .status-block{padding:42px 16px 14px;text-align:center;}
+.menu-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;color:var(--brand-1);margin:0 0 14px;text-align:center;}
 .status-row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:6px;}
 .badge{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;}
 .badge.open{background:#e3f3e2;color:#2e7031;}
@@ -109,14 +112,17 @@ footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.
   <div class="head-top" id="headTop">
     <div class="banner-wrap" id="bannerWrap"><img class="banner" id="bannerImg" style="display:none"></div>
     <div class="head-overlay" id="headOverlay">
-      <div class="logo-sm placeholder" id="logoImg">🍃</div>
-      <div class="head-text">
-        <h1 id="restName">Loading…</h1>
-        <p class="loc" id="restLoc"></p>
+      <div class="head-badge">
+        <div class="logo-sm placeholder" id="logoImg">🍃</div>
+        <div class="head-text">
+          <h1 id="restName">Loading…</h1>
+          <p class="loc" id="restLoc"></p>
+        </div>
       </div>
     </div>
   </div>
   <div class="status-block">
+    <h2 class="menu-title">Guest Food &amp; Beverage Menu</h2>
     <div class="status-row" id="statusRow"></div>
     <div class="hours-line" id="hoursLine"></div>
     <div class="policy-note">
@@ -136,8 +142,7 @@ footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.
   <div id="sections" style="display:none"></div>
 </div>
 
-<footer>Prices are shown for reference and may vary slightly at time of order.</footer>
-<div class="dev-footer" id="devFooter">Developed by Prasanna Kurukuladithya (Priya) | Gaia Lake Kandalama - Sri Lanka | v1.1 | Copyright © 2026. All rights reserved.</div>
+<div class="dev-footer" id="devFooter">Developed by Prasanna Kurukuladithya (Priya) | Gaia Lake Kandalama - Sri Lanka | v<span id="devVersion">1.2</span> | Copyright © 2026. All rights reserved.</div>
 
 <script src="config.js"></script>
 <script>
@@ -228,10 +233,8 @@ function render(data){
   document.getElementById('hoursLine').textContent = open12 && close12
     ? `Open to Order ${open12} to ${close12}` : '';
 
-  const devFooter = document.getElementById('devFooter');
-  if (data.meta && data.meta.appVersion) {
-    devFooter.textContent = devFooter.textContent.replace(/v[\d.]+/, 'v' + data.meta.appVersion);
-  }
+  const devVersion = document.getElementById('devVersion');
+  devVersion.textContent = (data.meta && data.meta.appVersion) || devVersion.textContent;
 
   const categories = (data.categories || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
   const dishes = (data.dishes || []).filter(d => d.active !== false);

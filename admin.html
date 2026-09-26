@@ -313,6 +313,15 @@ a{color:inherit;}
           <div class="hint">Minor/patch changes: +0.1 (e.g. 1.0 → 1.1). Major changes: +1.0 (e.g. 1.9 → 2.0).</div>
         </div>
 
+        <div class="panel-box">
+          <h3>What's New</h3>
+          <div class="hint" id="whatsNewSummary" style="margin-bottom:10px;"></div>
+          <div class="field"><label>Update Note (shown above after saving)</label>
+            <input type="text" id="changeNoteField" placeholder="e.g. Centered header, added menu title, removed price disclaimer">
+          </div>
+          <div class="hint">Full version history: <a href="WhatsNew.md" download>Download WhatsNew.md</a></div>
+        </div>
+
         <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
       </section>
 
@@ -320,7 +329,7 @@ a{color:inherit;}
       <section id="view-qr" class="hidden">
         <div class="qr-box">
           <div id="qrImgHolder"></div>
-          <div style="font-weight:800;margin-bottom:2px;" id="qrName">Gaia Lake Bungalow</div>
+          <div style="font-weight:800;margin-bottom:2px;" id="qrName">Gaia Lake - Kandalama</div>
           <div class="hint" style="margin-bottom:16px;">Scan to view menu</div>
           <div class="btn-row" style="justify-content:center;">
             <button class="btn btn-primary" id="downloadQrBtn">⬇ Download PNG</button>
@@ -402,8 +411,8 @@ let dishRemovedImage = false;
 let logoPendingBlob = null, bannerPendingBlob = null;
 
 const DEFAULT_STATE = () => ({
-  meta:{ appVersion:"1.0", updated:new Date().toISOString() },
-  profile:{ name:"Gaia Lake Bungalow", phone:"", city:"", country:"" },
+  meta:{ appVersion:"1.0", changeNote:"", updated:new Date().toISOString() },
+  profile:{ name:"Gaia Lake - Kandalama", phone:"", city:"", country:"" },
   settings:{ acceptingOrders:true, kitchenOpen:"06:00", kitchenClose:"23:00",
              theme:{ primary: CONFIG.DEFAULT_THEME.primary, secondary: CONFIG.DEFAULT_THEME.secondary } },
   categories:[], dishes:[], tags:["Popular","Chef's Special","Spicy"]
@@ -921,6 +930,12 @@ function renderSettings(){
   document.getElementById('colorPrimaryHex').textContent = state.settings.theme.primary;
   document.getElementById('colorSecondaryHex').textContent = state.settings.theme.secondary;
   document.getElementById('appVersionField').value = state.meta.appVersion || '1.0';
+  document.getElementById('changeNoteField').value = state.meta.changeNote || '';
+  {
+    const updatedDate = state.meta.updated ? new Date(state.meta.updated).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+    document.getElementById('whatsNewSummary').textContent =
+      `v${state.meta.appVersion || '1.0'}${updatedDate ? ' — ' + updatedDate : ''}${state.meta.changeNote ? ': ' + state.meta.changeNote : ''}`;
+  }
   renderTagPicker(document.getElementById('tagManageList'), []); // display-only list below
   document.getElementById('tagManageList').innerHTML = state.tags.map(t=>
     `<span class="tag-chip selected">${t} <span data-del="${t}" style="cursor:pointer;margin-left:4px;">×</span></span>`
@@ -952,6 +967,7 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
     secondary: document.getElementById('colorSecondary').value
   };
   state.meta.appVersion = document.getElementById('appVersionField').value.trim() || state.meta.appVersion;
+  state.meta.changeNote = document.getElementById('changeNoteField').value.trim();
   applyTheme();
   await persist();
   renderDashboard();

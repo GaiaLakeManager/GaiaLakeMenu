@@ -42,5 +42,5 @@ const CONFIG = {
   // If it's named index.html, the /index.html suffix is optional.
   GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
-  RESTAURANT_NAME_FALLBACK: "Gaia Lake Bungalow"
+  RESTAURANT_NAME_FALLBACK: "Gaia Lake - Kandalama"
 };
