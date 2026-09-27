@@ -42,5 +42,10 @@ const CONFIG = {
   // If it's named index.html, the /index.html suffix is optional.
   GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
-  RESTAURANT_NAME_FALLBACK: "Gaia Lake - Kandalama"
+  RESTAURANT_NAME_FALLBACK: "Gaia Lake - Kandalama",
+
+  // --- App version & What's New (Claude updates these two lines on every release —
+  // admin no longer needs to type a version number anywhere) -----------------
+  APP_VERSION: "1.3",
+  WHATS_NEW_LATEST: "Added item sub-options (e.g. protein choice) with their own prices; version/What's New are now developer-managed, no admin input needed; admin login logo replaced with the real Gaia Lake logo."
 };

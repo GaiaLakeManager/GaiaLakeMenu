@@ -4,108 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gaia Lake - Kandalama — Menu</title>
+<link rel="icon" type="image/png" href="Favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --brand-1:#4C9D38; --brand-2:#1E9BD7;
-  --cream:#fbf8f1; --paper:#ffffff; --ink:#1c2b22; --ink-soft:#5b6b60;
-  --line:#e7e0d2; --accent:#e08a3c; --danger:#c0392b;
-  box-sizing:border-box;
-}
-html{scroll-padding-top:120px;}
-*{box-sizing:border-box;}
-body{margin:0;background:var(--cream);color:var(--ink);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;
-  padding-bottom:env(safe-area-inset-bottom,0px);}
-h1,h2,.disp{font-family:'Fraunces',serif;}
-.wrap{max-width:980px;margin:0 auto;padding:0 14px 60px;}
-img{max-width:100%;}
-
-/* ---------- header ---------- */
-header{position:relative;padding-top:env(safe-area-inset-top,0px);background:var(--cream);}
-.head-top{position:relative;}
-.banner-wrap{width:100%;aspect-ratio:16/3.1;min-height:70px;background:linear-gradient(135deg,#eef7ee,#e4f3fb);overflow:hidden;}
-.banner-wrap img.banner{width:100%;height:100%;object-fit:cover;display:block;}
-.head-overlay{position:absolute;left:0;right:0;bottom:-28px;max-width:980px;margin:0 auto;padding:0 14px;display:flex;justify-content:center;}
-.head-badge{display:flex;align-items:center;gap:12px;background:rgba(10,22,15,.4);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:6px 18px 6px 6px;border-radius:999px;}
-.logo-sm{width:60px;height:60px;border-radius:14px;object-fit:cover;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);flex:0 0 auto;}
-.logo-sm.placeholder{display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--brand-1);}
-.head-text{padding-bottom:0;min-width:0;}
-.head-text h1{font-size:1.35rem;font-weight:600;margin:0;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35);line-height:1.15;}
-.head-text .loc{font-size:.82rem;color:rgba(255,255,255,.92);text-shadow:0 1px 4px rgba(0,0,0,.3);margin:2px 0 0;}
-.no-banner .head-badge{background:none;backdrop-filter:none;padding:0;}
-.no-banner .head-text h1{color:var(--brand-1);text-shadow:none;}
-.no-banner .head-text .loc{color:var(--ink-soft);text-shadow:none;}
-.no-banner .head-overlay{position:static;margin:14px auto 0;}
-.no-banner .banner-wrap{display:none;}
-
-.mode-toggle{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;z-index:6;
-  width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.85);
-  display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,.15);}
-
-.status-block{padding:42px 16px 14px;text-align:center;}
-.menu-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;color:var(--brand-1);margin:0 0 14px;text-align:center;}
-.status-row{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:6px;}
-.badge{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;padding:5px 12px;border-radius:999px;}
-.badge.open{background:#e3f3e2;color:#2e7031;}
-.badge.closed{background:#fbe7e4;color:var(--danger);}
-.badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
-.hours-line{font-size:.8rem;color:var(--ink-soft);font-weight:600;}
-.call-btn{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;padding:5px 13px;border-radius:999px;
-  background:var(--brand-1);color:#fff;text-decoration:none;}
-.policy-note{max-width:560px;margin:12px auto 0;background:var(--paper);border:1px solid var(--line);border-radius:14px;
-  padding:14px 16px;text-align:left;font-size:.82rem;line-height:1.55;color:var(--ink-soft);}
-.policy-note strong{display:block;color:var(--ink);font-size:.8rem;letter-spacing:.02em;margin-bottom:6px;}
-.policy-note ul{margin:0;padding-left:18px;}
-.policy-note li{margin-bottom:4px;}
-
-/* ---------- quick-jump nav ---------- */
-nav{position:sticky;top:0;z-index:10;background:var(--cream);border-bottom:1px solid var(--line);}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 14px;max-width:980px;margin:0 auto;scrollbar-width:none;}
-.tabs::-webkit-scrollbar{display:none;}
-.tab{flex:0 0 auto;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--paper);
-  color:var(--ink-soft);font-weight:600;font-size:.88rem;cursor:pointer;white-space:nowrap;transition:.15s;}
-.tab:hover{border-color:var(--brand-2);}
-.tab.active{background:var(--brand-1);border-color:var(--brand-1);color:#fff;}
-
-/* ---------- sections / cards ---------- */
-.cat-section{padding-top:26px;scroll-margin-top:64px;}
-.cat-heading{font-size:1.3rem;font-weight:600;color:var(--brand-1);margin:0 0 14px;}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
-@media (min-width:600px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;}
-.card .photo-wrap{position:relative;aspect-ratio:4/3;background:linear-gradient(160deg,#eef7ee,#e4f3fb);}
-.card .photo-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
-.card .photo-wrap .no-photo{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.7rem;opacity:.5;}
-.tag-row{position:absolute;top:6px;left:6px;display:flex;gap:4px;flex-wrap:wrap;max-width:calc(100% - 12px);}
-.tag{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--brand-1);
-  box-shadow:0 1px 4px rgba(0,0,0,.12);}
-.card .body{padding:9px 10px 11px;display:flex;flex-direction:column;gap:4px;flex:1;}
-.card .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;}
-.card .name{font-weight:700;font-size:.88rem;line-height:1.3;}
-.card .desc{color:var(--ink-soft);font-size:.76rem;line-height:1.45;flex:1;}
-.price{font-family:'Fraunces',serif;font-weight:600;color:var(--accent);white-space:nowrap;font-size:.86rem;}
-.price .usd{display:block;font-family:'Manrope',sans-serif;font-weight:600;font-size:.65rem;color:var(--ink-soft);}
-
-.empty-state, .loading{text-align:center;padding:60px 20px;color:var(--ink-soft);}
-.loading .spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--brand-1);
-  margin:0 auto 14px;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.85rem;line-height:1.7;}
-.dev-footer{background:var(--brand-1);color:#fff;text-align:center;font-size:10px;
-  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));letter-spacing:.01em;}
-
-/* ---------- dark mode ---------- */
-:root[data-theme="dark"]{--cream:#141a15;--paper:#1b2219;--ink:#eef1ea;--ink-soft:#a7b3a3;--line:#2b342b;}
-:root[data-theme="dark"] header{background:var(--cream);}
-:root[data-theme="dark"] .card .photo-wrap{background:linear-gradient(160deg,#20291f,#17222a);}
-:root[data-theme="dark"] .mode-toggle{background:rgba(27,34,25,.85);color:var(--ink);}
-:root[data-theme="dark"] .tag{background:rgba(27,34,25,.9);}
-:root[data-theme="dark"] .logo-sm{background:#1b2219;}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="guest-menu">
 
 <header id="header">
   <button class="mode-toggle" id="modeToggle" title="Toggle dark / light mode" aria-label="Toggle dark or light mode">🌙</button>
@@ -146,6 +50,9 @@ footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.
 
 <script src="config.js"></script>
 <script>
+/* ---------------- version (hardcoded in config.js, updated by developer each release) ---------------- */
+document.getElementById('devVersion').textContent = CONFIG.APP_VERSION;
+
 /* ---------------- theme mode ---------------- */
 const root = document.documentElement;
 const savedMode = localStorage.getItem('gl-menu-mode');
@@ -233,8 +140,6 @@ function render(data){
   document.getElementById('hoursLine').textContent = open12 && close12
     ? `Open to Order ${open12} to ${close12}` : '';
 
-  const devVersion = document.getElementById('devVersion');
-  devVersion.textContent = (data.meta && data.meta.appVersion) || devVersion.textContent;
 
   const categories = (data.categories || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
   const dishes = (data.dishes || []).filter(d => d.active !== false);
@@ -287,13 +192,28 @@ function renderCard(d){
     ? `<img src="${driveImageUrl(d.imageFileId,700)}" alt="${esc(d.name)}" loading="lazy">`
     : `<div class="no-photo">🍽️</div>`;
   const tags = (d.tags||[]).map(t => `<span class="tag">${esc(t)}</span>`).join('');
-  const usd = d.price && d.price.usd ? `<span class="usd">${money(d.price.usd,'USD')}</span>` : '';
-  const lkr = d.price ? money(d.price.lkr,'LKR') : '';
+  const hasSubOptions = Array.isArray(d.subOptions) && d.subOptions.length > 0;
+
+  let priceCell = '';
+  let subOptionsBlock = '';
+  if (hasSubOptions){
+    subOptionsBlock = `<div class="sub-options">${d.subOptions.map(o => {
+      const oUsd = o.price && o.price.usd ? `<span class="usd">${money(o.price.usd,'USD')}</span>` : '';
+      const oLkr = o.price ? money(o.price.lkr,'LKR') : '';
+      return `<div class="sub-option-row"><span class="sub-name">${esc(o.name)}</span><span class="price">${oLkr}${oUsd}</span></div>`;
+    }).join('')}</div>`;
+  } else {
+    const usd = d.price && d.price.usd ? `<span class="usd">${money(d.price.usd,'USD')}</span>` : '';
+    const lkr = d.price ? money(d.price.lkr,'LKR') : '';
+    priceCell = `<span class="price">${lkr}${usd}</span>`;
+  }
+
   return `<div class="card">
     <div class="photo-wrap">${img}${tags?`<div class="tag-row">${tags}</div>`:''}</div>
     <div class="body">
-      <div class="row"><span class="name">${esc(d.name)}</span><span class="price">${lkr}${usd}</span></div>
+      <div class="row"><span class="name">${esc(d.name)}</span>${priceCell}</div>
       ${d.description?`<div class="desc">${esc(d.description)}</div>`:''}
+      ${subOptionsBlock}
     </div>
   </div>`;
 }

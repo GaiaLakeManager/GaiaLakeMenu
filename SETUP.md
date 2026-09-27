@@ -1,8 +1,13 @@
 # Gaia Lake Menu System — Setup Guide
 
-Three files: `config.js` (shared settings), `admin.html` (your private dashboard),
-`index.html` (the public page guests reach via QR code — named index.html so it serves directly at your GitHub Pages root). A separate,
-isolated Google Cloud project — nothing shared with the Asset Inventory app.
+Five files: `config.js` (shared settings + app version), `style.css` (shared styles for
+both pages), `admin.html` (your private dashboard), `index.html` (the public page
+guests reach via QR code — named index.html so it serves directly at your GitHub
+Pages root), and `WhatsNew.md` (version history, kept alongside the app and
+updated with each release). Optionally add a `logo.png` file (your actual logo)
+in the same folder — the Admin sign-in screen will use it automatically, falling
+back to a placeholder leaf icon if it's missing. A separate, isolated Google
+Cloud project — nothing shared with the Asset Inventory app.
 
 ---
 
@@ -58,7 +63,8 @@ value in `config.js`.
 ## 6. Test locally, then go live
 
 **Local test (VS Code Live Server or similar):**
-1. Put `config.js`, `admin.html`, `index.html` in one folder, open it in
+1. Put `config.js`, `style.css`, `admin.html`, `index.html` (and `WhatsNew.md`,
+   `logo.png` if you have it) in one folder, open it in
    VS Code, right-click `admin.html` → "Open with Live Server."
 2. Add that local origin (e.g. `http://127.0.0.1:5500`) to the OAuth Client's
    Authorized JavaScript origins (step 3) if it isn't already there.
@@ -68,8 +74,9 @@ value in `config.js`.
    files load**, so one edit covers both apps.
 
 **Go live (GitHub Pages, same as your other Gaia Lake apps):**
-1. Push `config.js`, `admin.html`, `index.html` to a GitHub repo → Settings
-   → Pages → enable for the `main` branch.
+1. Push `config.js`, `style.css`, `admin.html`, `index.html`, `WhatsNew.md`, and
+   (optionally) `logo.png` to a GitHub repo → Settings → Pages → enable for the
+   `main` branch.
 2. Add the resulting `https://gaialakemanager.github.io/GaiaLakeMenu` origin to the
    OAuth Client's Authorized JavaScript origins, and to the API key's website
    restriction.
