@@ -1,5 +1,10 @@
 # Gaia Lake Menu — What's New
 
+## v1.4 — 26 Sep 2026
+- Fixed the dark/light toggle button, which stopped working after the v1.3 style.css split (the dark-mode colour override was targeting the wrong element once the base colours moved onto the page's `<body>`).
+- Admin → Menu → Dishes now shows each dish's full description and, for dishes with sub-options, every sub-option's own price — nothing is hidden behind an "N options" count anymore.
+- Added "Junior Guest Privileges" (50% off meal rates for children under 12) as the first bullet in the guest ordering policy note.
+
 ## v1.3 — 26 Sep 2026
 - Version number and "What's New" note are now hardcoded in config.js and updated by the developer with each release — no more typing a version number into Admin → Settings each time. Settings now just shows the current version and note, read-only.
 - Added a new logo.png reference on the Admin sign-in screen — replace the placeholder leaf icon with your actual logo by uploading a `logo.png` file alongside admin.html on GitHub Pages.

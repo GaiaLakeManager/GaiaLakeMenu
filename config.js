@@ -32,7 +32,7 @@ const CONFIG = {
 
   // Google account(s) allowed to sign in and edit the menu.
   // Add your Gmail/Workspace address(es) here, e.g. ["you@gmail.com"].
-  ADMIN_EMAILS: ["priyagaialake@gmail.com","gaialakewebapps@gmail.com"],
+  ADMIN_EMAILS: ["priyagaialake@gmail.com","gaialakewebapps@gmail.com","pkdithya@gmail.com"],
 
   // Default two-tone brand palette. Editable later from Admin → Settings;
   // this is only the fallback used before any settings are saved.
@@ -46,6 +46,6 @@ const CONFIG = {
 
   // --- App version & What's New (Claude updates these two lines on every release —
   // admin no longer needs to type a version number anywhere) -----------------
-  APP_VERSION: "1.3",
-  WHATS_NEW_LATEST: "Added item sub-options (e.g. protein choice) with their own prices; version/What's New are now developer-managed, no admin input needed; admin login logo replaced with the real Gaia Lake logo."
+  APP_VERSION: "1.4",
+  WHATS_NEW_LATEST: "Fixed dark/light toggle (broken by the style.css split); Admin dish list now shows full description and every sub-option's price; added Junior Guest Privileges policy note."
 };

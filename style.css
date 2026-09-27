@@ -109,13 +109,13 @@ footer{text-align:center;padding:30px 20px 8px;color:var(--ink-soft);font-size:.
   padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));letter-spacing:.01em;}
 
 /* ---------- dark mode ---------- */
-:root[data-theme="dark"]{--cream:#141a15;--paper:#1b2219;--ink:#eef1ea;--ink-soft:#a7b3a3;--line:#2b342b;}
-:root[data-theme="dark"] header{background:var(--cream);}
-:root[data-theme="dark"] .card .photo-wrap{background:linear-gradient(160deg,#20291f,#17222a);}
-:root[data-theme="dark"] .mode-toggle{background:rgba(27,34,25,.85);color:var(--ink);}
-:root[data-theme="dark"] .tag{background:rgba(27,34,25,.9);}
-:root[data-theme="dark"] .logo-sm{background:#1b2219;}
-:root[data-theme="dark"] .sub-option-row{border-top-color:var(--line);}
+html[data-theme="dark"] body.guest-menu{--cream:#141a15;--paper:#1b2219;--ink:#eef1ea;--ink-soft:#a7b3a3;--line:#2b342b;}
+html[data-theme="dark"] header{background:var(--cream);}
+html[data-theme="dark"] .card .photo-wrap{background:linear-gradient(160deg,#20291f,#17222a);}
+html[data-theme="dark"] .mode-toggle{background:rgba(27,34,25,.85);color:var(--ink);}
+html[data-theme="dark"] .tag{background:rgba(27,34,25,.9);}
+html[data-theme="dark"] .logo-sm{background:#1b2219;}
+html[data-theme="dark"] .sub-option-row{border-top-color:var(--line);}
 
 
 /* ==========================================================================
@@ -238,7 +238,7 @@ body.admin-app a{color:inherit;}
   font-weight:700;font-size:.82rem;white-space:nowrap;}
 .cat-pill.active{background:var(--brand-1);border-color:var(--brand-1);color:#fff;}
 
-.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+.dish-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
 .dish-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
 .dish-card .thumb{width:100%;aspect-ratio:4/3;object-fit:cover;background:#eef1ed;display:block;}
 .dish-card .thumb-ph{width:100%;aspect-ratio:4/3;background:#eef1ed;display:flex;align-items:center;justify-content:center;font-size:1.6rem;opacity:.4;}
@@ -246,6 +246,13 @@ body.admin-app a{color:inherit;}
 .dish-card .name-row{display:flex;justify-content:space-between;gap:6px;}
 .dish-card .name{font-weight:700;font-size:.92rem;}
 .dish-card .price{font-size:.82rem;font-weight:700;color:var(--brand-1);white-space:nowrap;}
+.dish-card .dish-desc{font-size:.82rem;color:var(--ink-soft);line-height:1.5;margin:6px 0;}
+.dish-card .dish-suboptions{margin:6px 0;display:flex;flex-direction:column;gap:3px;}
+.dish-card .dish-suboption-row{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;
+  padding-top:3px;border-top:1px dashed var(--line);}
+.dish-card .dish-suboption-row:first-child{border-top:none;padding-top:0;}
+.dish-card .dish-suboption-row span:first-child{font-weight:600;}
+.dish-card .dish-suboption-row span:last-child{color:var(--brand-1);font-weight:700;white-space:nowrap;}
 .dish-card .tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0;}
 .dish-card .tags .tag-chip{padding:2px 8px;font-size:.68rem;}
 .dish-card .inactive-badge{font-size:.68rem;color:var(--danger);font-weight:700;}

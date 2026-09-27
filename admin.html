@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gaia Lake — Menu Admin</title>
+<link rel="icon" type="image/png" href="Favicon-Admin.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -635,15 +636,24 @@ function renderDishSection(){
     const thumb = d.imageFileId
       ? `<img class="thumb" src="https://drive.google.com/thumbnail?id=${d.imageFileId}&sz=w400">`
       : `<div class="thumb-ph">🍽️</div>`;
-    const price = (d.subOptions && d.subOptions.length)
-      ? `${d.subOptions.length} option${d.subOptions.length>1?'s':''}`
-      : [d.price?.lkr?`LKR ${d.price.lkr}`:'', d.price?.usd?`$${d.price.usd}`:''].filter(Boolean).join(' · ');
+    const noSubOptions = !d.subOptions || !d.subOptions.length;
+    const price = noSubOptions
+      ? [d.price?.lkr?`LKR ${d.price.lkr}`:'', d.price?.usd?`$${d.price.usd}`:''].filter(Boolean).join(' · ')
+      : '';
+    const subOptionsHtml = !noSubOptions
+      ? `<div class="dish-suboptions">${d.subOptions.map(o=>{
+          const parts = [o.price?.lkr?`LKR ${o.price.lkr}`:'', o.price?.usd?`$${o.price.usd}`:''].filter(Boolean).join(' · ');
+          return `<div class="dish-suboption-row"><span>${esc(o.name)}</span><span>${parts}</span></div>`;
+        }).join('')}</div>`
+      : '';
     return `<div class="dish-card">
       ${thumb}
       <div class="body">
-        <div class="name-row"><span class="name">${d.name}</span><span class="price">${price}</span></div>
-        <div class="hint">${cat ? (cat.icon||'')+' '+cat.name : '—'} ${d.active===false?'<span class=\"inactive-badge\">· Hidden</span>':''}</div>
-        <div class="tags">${(d.tags||[]).map(t=>`<span class="tag-chip selected">${t}</span>`).join('')}</div>
+        <div class="name-row"><span class="name">${esc(d.name)}</span><span class="price">${price}</span></div>
+        <div class="hint">${cat ? (cat.icon||'')+' '+esc(cat.name) : '—'} ${d.active===false?'<span class=\"inactive-badge\">· Hidden</span>':''}</div>
+        ${d.description ? `<div class="dish-desc">${esc(d.description)}</div>` : ''}
+        ${subOptionsHtml}
+        <div class="tags">${(d.tags||[]).map(t=>`<span class="tag-chip selected">${esc(t)}</span>`).join('')}</div>
         <div class="actions"><button class="btn btn-sm" data-edit="${d.id}">Edit</button></div>
       </div>
     </div>`;
