@@ -30,6 +30,15 @@ const CONFIG = {
   BACKUP_FOLDER_NAME: "Backup",                // admin-only, JSON backups
   DELETED_IMAGES_FOLDER_NAME: "Deleted Images",// admin-only, soft-deleted photos
 
+  // OPTIONAL: if your Backup / Deleted Images folders are NOT inside GuestView, paste each
+  // folder's ID here (the long code at the end of the folder's Drive URL). When filled in,
+  // it is used instead of looking the folder up by name. Leave "" to search inside GuestView.
+  BACKUP_FOLDER_ID: "1OCgpZ80zS8tW4gNgkFuYkpRyML7Bh9fT",
+  DELETED_IMAGES_FOLDER_ID: "1w27zIfxENUzJ64UyWhi_k8icSGFMge14",
+
+  // Automatic backups: one file per day, per week and per month; only the newest N of each are kept.
+  BACKUP_KEEP: { daily: 14, weekly: 8, monthly: 12 },
+
   // Google account(s) allowed to sign in and edit the menu.
   // Add your Gmail/Workspace address(es) here, e.g. ["you@gmail.com"].
   ADMIN_EMAILS: ["priyagaialake@gmail.com","gaialakewebapps@gmail.com","pkdithya@gmail.com"],
@@ -42,10 +51,16 @@ const CONFIG = {
   // If it's named index.html, the /index.html suffix is optional.
   GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
+  // Guest ordering (v2.0): the Apps Script web-app URL (…/exec) and the private Orders folder ID (owned by the orders account).
+  ORDER_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzB0zcOSoT76o5p9E7uDNzfserKz_yYci9d7-nVZHqlrL924Yxb01_K1a0a9lx7IVGjhg/exec",
+  ORDERS_FOLDER_ID: "1JIYhb80EuLtRGHBU0PPItqgZH_XxFH6f",
+  // Email guests see and use in the fallback "Email" button (Admin → Settings → For orders overrides it if filled in).
+  GUEST_ORDER_EMAIL: "priyagaialake@gmail.com",
+
   RESTAURANT_NAME_FALLBACK: "Gaia Lake - Kandalama",
 
   // --- App version & What's New (Claude updates these two lines on every release —
   // admin no longer needs to type a version number anywhere) -----------------
-  APP_VERSION: "1.4",
-  WHATS_NEW_LATEST: "Fixed dark/light toggle (broken by the style.css split); Admin dish list now shows full description and every sub-option's price; added Junior Guest Privileges policy note."
+  APP_VERSION: "2.0",
+  WHATS_NEW_LATEST: "Guests can now order from the menu: pick items, dining date/time, room, name and phone, review, then send straight to the kitchen (with WhatsApp / email / SMS / call fallback). Admin Settings has a new For orders section."
 };

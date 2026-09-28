@@ -32,6 +32,7 @@
     <div class="policy-note">
       <strong>GUEST ORDERING POLICY &amp; NOTES</strong>
       <ul>
+        <li><strong>Rise &amp; Shine Inclusions:</strong> Complimentary morning Ceylon tea or coffee and seasonal fresh fruits are included for all breakfast orders.</li>
         <li><strong>Junior Guest Privileges:</strong> 50% off meal rates for all children under 12 years.</li>
         <li><strong>Pre-order Basis:</strong> All meals are prepared fresh to order. Guests are kindly requested to place their food orders in advance.</li>
         <li><strong>Group Selection Policy:</strong> To maintain optimal kitchen efficiency and prompt service, groups are kindly requested to select one common category / meal option per group for each meal sitting.</li>
@@ -47,6 +48,9 @@
   <div id="sections" style="display:none"></div>
 </div>
 
+<div class="cart-bar hidden" id="cartBar"><span id="cartSummary"></span><button id="openCart">Review order</button></div>
+<div class="o-back" id="orderModal"><div class="o-modal"><h2 id="orderTitle"></h2><div id="orderBody"></div></div></div>
+
 <div class="dev-footer" id="devFooter">Developed by Prasanna Kurukuladithya (Priya) | Gaia Lake Kandalama - Sri Lanka | v<span id="devVersion">1.2</span> | Copyright © 2026. All rights reserved.</div>
 
 <script src="config.js"></script>
@@ -59,15 +63,11 @@ const root = document.documentElement;
 const savedMode = localStorage.getItem('gl-menu-mode');
 if (savedMode) root.setAttribute('data-theme', savedMode);
 function applyModeIcon(){
-  const isDark = root.getAttribute('data-theme') === 'dark'
-    || (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.getElementById('modeToggle').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('modeToggle').textContent = root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
 }
 applyModeIcon();
 document.getElementById('modeToggle').onclick = () => {
-  const current = root.getAttribute('data-theme')
-    || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = current === 'dark' ? 'light' : 'dark';
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   root.setAttribute('data-theme', next);
   localStorage.setItem('gl-menu-mode', next);
   applyModeIcon();
@@ -97,8 +97,10 @@ function computeOpenStatus(settings){
 
 /* ---------------- render ---------------- */
 function render(data){
+  window.MENU = data;
   const profile = data.profile || {};
   const settings = data.settings || {};
+  ORDERING = !!CONFIG.ORDER_SCRIPT_URL && settings.acceptingOrders !== false;
   const theme = settings.theme || CONFIG.DEFAULT_THEME;
   root.style.setProperty('--brand-1', theme.primary || CONFIG.DEFAULT_THEME.primary);
   root.style.setProperty('--brand-2', theme.secondary || CONFIG.DEFAULT_THEME.secondary);
@@ -142,7 +144,8 @@ function render(data){
     ? `Open to Order ${open12} to ${close12}` : '';
 
 
-  const categories = (data.categories || []).slice().sort((a,b)=>(a.order||0)-(b.order||0));
+  const categories = (data.categories || []).map((c,i)=>({c,i}))
+    .sort((a,b)=>((a.c.order||0)-(b.c.order||0)) || (a.i-b.i)).map(x=>x.c);   // category order, ties keep saved order
   const dishes = (data.dishes || []).filter(d => d.active !== false);
   const tabsEl = document.getElementById('tabs');
   const sectionsEl = document.getElementById('sections');
@@ -153,7 +156,7 @@ function render(data){
   }
 
   categories.forEach(cat => {
-    const items = dishes.filter(d => d.categoryId === cat.id).sort((a,b)=>(a.order||0)-(b.order||0));
+    const items = dishes.filter(d => d.categoryId === cat.id).sort((a,b)=>((a.order||0)-(b.order||0)) || ((a.code||0)-(b.code||0)));
     const tab = document.createElement('button');
     tab.className = 'tab';
     tab.textContent = `${cat.icon ? cat.icon+' ' : ''}${cat.name}`;
@@ -184,6 +187,7 @@ function render(data){
     categories.forEach(cat => { const el = document.getElementById('cat-'+cat.id); if (el) io.observe(el); });
   }
 
+  initOrdering();
   document.getElementById('loadingState').style.display = 'none';
   sectionsEl.style.display = 'block';
 }
@@ -201,7 +205,7 @@ function renderCard(d){
     subOptionsBlock = `<div class="sub-options">${d.subOptions.map(o => {
       const oUsd = o.price && o.price.usd ? `<span class="usd">${money(o.price.usd,'USD')}</span>` : '';
       const oLkr = o.price ? money(o.price.lkr,'LKR') : '';
-      return `<div class="sub-option-row"><span class="sub-name">${esc(o.name)}</span><span class="price">${oLkr}${oUsd}</span></div>`;
+      return `<div class="sub-option-row"><span class="sub-name">${esc(o.name)}</span><span class="price">${oLkr}${oUsd}</span>${addBtn(d.code,o.name)}</div>`;
     }).join('')}</div>`;
   } else {
     const usd = d.price && d.price.usd ? `<span class="usd">${money(d.price.usd,'USD')}</span>` : '';
@@ -209,12 +213,14 @@ function renderCard(d){
     priceCell = `<span class="price">${lkr}${usd}</span>`;
   }
 
+  const code = d.code ? `<span class="item-code">#${String(d.code).padStart(3,'0')}</span>` : '';
   return `<div class="card">
-    <div class="photo-wrap">${img}${tags?`<div class="tag-row">${tags}</div>`:''}</div>
+    <div class="photo-wrap">${img}${tags?`<div class="tag-row">${tags}</div>`:''}${code}</div>
     <div class="body">
       <div class="row"><span class="name">${esc(d.name)}</span>${priceCell}</div>
       ${d.description?`<div class="desc">${esc(d.description)}</div>`:''}
       ${subOptionsBlock}
+      ${hasSubOptions ? '' : addBtn(d.code,'')}
     </div>
   </div>`;
 }
@@ -240,5 +246,6 @@ async function loadMenu(){
 }
 loadMenu();
 </script>
+<script src="orders.js"></script>
 </body>
 </html>

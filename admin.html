@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gaia Lake — Menu Admin</title>
+<title>Gaia Lake - Kandalama — Admin Control Panel</title>
 <link rel="icon" type="image/png" href="Favicon-Admin.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>try{var _m=localStorage.getItem('gl-admin-mode');if(_m)document.documentElement.setAttribute('data-theme',_m);}catch(e){}</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-app">
@@ -18,7 +20,7 @@
     <div class="brand-badge" id="signinBrandBadge">
       <img src="logo.png" alt="Gaia Lake" onerror="this.parentElement.textContent='🍃';">
     </div>
-    <h1>Gaia Lake — Menu Admin</h1>
+    <h1 class="signin-title"><span class="t1">Gaia Lake - Kandalama</span><span class="t2">Guest Food &amp; Beverage Menu</span><span class="t3">Admin Control Panel</span></h1>
     <p>Sign in with the Google account that has editor access to the GuestView Drive folder.</p>
     <div id="gsiBtnHolder"></div>
     <div class="signin-note">Only accounts listed in <code>ADMIN_EMAILS</code> (config.js) can make changes.</div>
@@ -31,7 +33,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <div class="mark" id="sidebarMark">GL</div>
-      <div class="txt">Gaia Lake<small>Menu Admin</small></div>
+      <div class="txt">Gaia Lake - Kandalama<small>Guest Food &amp; Beverage Menu</small><small class="role">Admin Control Panel</small></div>
     </div>
     <button class="navitem active" data-view="dashboard"><span class="ic">📊</span> Dashboard</button>
     <button class="navitem" data-view="menu"><span class="ic">🍽️</span> Menu</button>
@@ -39,6 +41,7 @@
     <button class="navitem" data-view="settings"><span class="ic">⚙️</span> Settings</button>
     <button class="navitem" data-view="qr"><span class="ic">🔗</span> QR Code</button>
     <button class="navitem nav-signout" id="signOutBtn"><span class="ic">↩</span> Sign Out</button>
+    <div class="dev-footer">Developed by Prasanna Kurukuladithya (Priya) | Gaia Lake Kandalama - Sri Lanka | v<span id="devVersion"></span> | Copyright © 2026. All rights reserved.</div>
   </aside>
 
   <div class="main">
@@ -47,7 +50,10 @@
         <button class="menu-btn" id="menuBtn">☰</button>
         <h2 id="viewTitle">Dashboard</h2>
       </div>
-      <div class="who" id="whoAmI"></div>
+      <div class="topbar-right">
+        <div class="who" id="whoAmI"></div>
+        <button class="mode-btn" id="modeToggle" title="Toggle dark / light mode" aria-label="Toggle dark or light mode">🌙</button>
+      </div>
     </div>
     <div class="content">
 
@@ -69,6 +75,7 @@
         <div class="panel-box">
           <h3>Sync status</h3>
           <div class="hint" id="syncStatus">—</div>
+          <div class="hint" id="backupStatus" style="margin-top:6px;"></div>
           <div class="btn-row" style="margin-top:12px;">
             <button class="btn" id="refreshBtn">↻ Refresh from Drive</button>
           </div>
@@ -152,6 +159,15 @@
         </div>
 
         <div class="panel-box">
+          <h3>For orders</h3>
+          <div class="field-row">
+            <div class="field"><label>Guest-facing orders email (optional)</label><input type="text" id="ordEmail" placeholder="Leave empty to use priyagaialake@gmail.com (config.js)"></div>
+            <div class="field"><label>Orders WhatsApp number</label><input type="tel" id="ordWhatsapp" placeholder="+94 77 291 1501"></div>
+          </div>
+          <div class="hint">This is the address guests see. The private address that receives the order emails is set in the Apps Script (ORDER_EMAIL). Used only for the guest's fallback buttons (WhatsApp / Email) if an order can't be sent directly. These two values are visible in the public menu data. The WhatsApp number defaults to the bungalow phone in Profile if left empty.</div>
+        </div>
+
+        <div class="panel-box">
           <h3>Manage Tags</h3>
           <div class="tag-picker" id="tagManageList"></div>
           <div class="tag-add-row">
@@ -175,8 +191,6 @@
       <section id="view-qr" class="hidden">
         <div class="qr-box">
           <div id="qrImgHolder"></div>
-          <div style="font-weight:800;margin-bottom:2px;" id="qrName">Gaia Lake - Kandalama</div>
-          <div class="hint" style="margin-bottom:16px;">Scan to view menu</div>
           <div class="btn-row" style="justify-content:center;">
             <button class="btn btn-primary" id="downloadQrBtn">⬇ Download PNG</button>
           </div>
@@ -200,6 +214,7 @@
       <input type="file" id="dishPhotoInput" accept="image/*" class="hidden">
     </div>
     <div class="field"><label>Category *</label><select id="dishCategory"></select></div>
+    <div class="hint" id="dishCodeLine" style="margin-bottom:10px;font-weight:700;"></div>
     <div class="field"><label>Dish Name *</label><input type="text" id="dishName"></div>
     <div class="field"><label>Description</label><textarea id="dishDesc"></textarea></div>
     <div class="field-row">
@@ -248,6 +263,22 @@
 
 <script src="config.js"></script>
 <script>
+/* ---------------- version (hardcoded in config.js — same number as the guest menu) ---------------- */
+document.getElementById('devVersion').textContent = CONFIG.APP_VERSION;
+
+/* ---------------- dark / light mode (remembered on this device) ---------------- */
+(function(){
+  const root = document.documentElement, btn = document.getElementById('modeToggle');
+  const icon = () => btn.textContent = root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+  icon();
+  btn.onclick = () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try{ localStorage.setItem('gl-admin-mode', next); }catch(e){}
+    icon();
+  };
+})();
+
 /* ==========================================================================
    STATE
    ========================================================================== */
@@ -418,17 +449,51 @@ async function trashFile(fileId){
 }
 
 /* ==========================================================================
+   ORDERING + ITEM CODES
+   ========================================================================== */
+function fmtCode(n){ return String(n).padStart(3,'0'); }
+function sortedCategories(){
+  return state.categories.map((c,i)=>({c,i}))
+    .sort((a,b)=>((a.c.order||0)-(b.c.order||0)) || (a.i-b.i)).map(x=>x.c);
+}
+// Dishes in menu order: category order first, then the dish's own order, then its code.
+function dishesInMenuOrder(list){
+  const rank = new Map(sortedCategories().map((c,i)=>[c.id,i]));
+  return list.map((d,i)=>({d,i})).sort((a,b)=>
+    ((rank.has(a.d.categoryId)?rank.get(a.d.categoryId):9999) - (rank.has(b.d.categoryId)?rank.get(b.d.categoryId):9999))
+    || ((a.d.order||0)-(b.d.order||0)) || ((a.d.code||0)-(b.d.code||0)) || (a.i-b.i)).map(x=>x.d);
+}
+// Runs after every load: gives categories clean sequential order, gives any dish without a
+// code the next number (never reusing one), and keeps the counter ahead of every code ever issued.
+function normalizeState(){
+  let changed = false;
+  state.meta = state.meta || {};
+  sortedCategories().forEach((c,i)=>{ if (c.order !== i){ c.order = i; changed = true; } });
+  state.categories = sortedCategories();
+  const maxCode = state.dishes.reduce((m,d)=>Math.max(m, Number(d.code)||0), 0);
+  let next = Math.max(Number(state.meta.nextItemNo)||1, maxCode+1);
+  dishesInMenuOrder(state.dishes).forEach(d=>{ if (!d.code){ d.code = next++; changed = true; } });
+  if (state.meta.nextItemNo !== next){ state.meta.nextItemNo = next; changed = true; }
+  return changed;
+}
+
+/* ==========================================================================
    BOOTSTRAP — resolve folders + menu file, load state
    ========================================================================== */
 async function bootstrap(){
   document.getElementById('syncStatus').textContent = 'Connecting to Drive…';
   try{
     folderIds.dishImages = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.DISH_IMAGES_FOLDER_NAME, true);
-    folderIds.backup     = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.BACKUP_FOLDER_NAME, true);
-    folderIds.deleted    = await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.DELETED_IMAGES_FOLDER_NAME, true);
-
-    if (!folderIds.dishImages || !folderIds.backup || !folderIds.deleted){
-      toast('Some subfolders (DishImages / Backup / Deleted Images) were not found by name — check they exist in GuestView.');
+    // Backup / Deleted Images: use the folder ID from config.js if given, otherwise look by name inside GuestView
+    folderIds.backup  = CONFIG.BACKUP_FOLDER_ID  || await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.BACKUP_FOLDER_NAME, true);
+    folderIds.deleted = CONFIG.DELETED_IMAGES_FOLDER_ID || await findChild(CONFIG.GUEST_FOLDER_ID, CONFIG.DELETED_IMAGES_FOLDER_NAME, true);
+    const folderState = {
+      dishImages: await folderStatus(folderIds.dishImages),
+      backup:     await folderStatus(folderIds.backup),
+      deleted:    await folderStatus(folderIds.deleted)
+    };
+    if (folderState.backup !== 'ok' || folderState.deleted !== 'ok' || folderState.dishImages !== 'ok'){
+      toast('Folder problem — see the Dashboard: backups or deleted-photo moves may not be working.');
     }
 
     let menuFileId = CONFIG.MENU_FILE_ID;
@@ -443,13 +508,28 @@ async function bootstrap(){
       state = await downloadJsonFile(menuFileId);
     }
     CONFIG.MENU_FILE_ID = menuFileId;
+    lastSavedJson = JSON.stringify(state);   // what is on Drive right now — this is what a backup should keep
+    const needsSave = normalizeState();
 
+    const fl = (label, st, hint) => st === 'ok'
+      ? `${label} ✓`
+      : `<span style="color:var(--danger);font-weight:700;">${label} ✗ ${hint[st] || hint.error}</span>`;
+    const hintFor = name => ({
+      notfound: `(not found — put a folder named "${name}" inside GuestView, or paste its ID in config.js)`,
+      readonly: '(you only have view access — this account needs Editor on the folder)',
+      error:    '(could not open the folder — check the ID and your access)'
+    });
     document.getElementById('syncStatus').innerHTML =
       `Connected. Menu file ID: <code>${menuFileId}</code><br>` +
+      `Folders: ${fl('DishImages', folderState.dishImages, hintFor(CONFIG.DISH_IMAGES_FOLDER_NAME))} · ` +
+      `${fl('Backup', folderState.backup, hintFor(CONFIG.BACKUP_FOLDER_NAME))} · ` +
+      `${fl('Deleted Images', folderState.deleted, hintFor(CONFIG.DELETED_IMAGES_FOLDER_NAME))}<br>` +
       (CONFIG.MENU_FILE_ID !== menuFileId ? '' : `<span style="color:var(--danger)">If this ID is not already in config.js, copy it into MENU_FILE_ID in the config.js used by BOTH this admin page and the public guest menu page.</span>`);
 
     applyTheme();
     renderAll();
+    if (needsSave) await persist(false);   // first run after this update: save the new item codes
+    refreshBackupStatus();
   }catch(err){
     console.error(err);
     document.getElementById('syncStatus').textContent = 'Connection failed: ' + err.message;
@@ -458,15 +538,103 @@ async function bootstrap(){
 }
 
 let saveTimer = null;
+let lastSavedJson = null;   // the menu exactly as last saved to / loaded from Drive
+let saveNotes = [];         // problems to report in the next save message (e.g. a photo that could not be moved)
+/* ---- tiered automatic backups: 1 file per day / week / month, oldest pruned (same design as the Inventory app) ---- */
+const p2 = n => String(n).padStart(2,'0');
+function localDateKey(d=new Date()){ return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
+function localMonthKey(d=new Date()){ return `${d.getFullYear()}-${p2(d.getMonth()+1)}`; }
+function isoWeekLabel(d=new Date()){
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));   // built from LOCAL y/m/d, so no UTC day-shift
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return `${t.getUTCFullYear()}-W${p2(Math.ceil(((t - yearStart) / 86400000 + 1) / 7))}`;
+}
+const BACKUP_TIERS = [
+  { id:'daily',   prefix:'menu-backup-daily-',   key: localDateKey,  keep:14 },
+  { id:'weekly',  prefix:'menu-backup-weekly-',  key: isoWeekLabel,  keep:8  },
+  { id:'monthly', prefix:'menu-backup-monthly-', key: localMonthKey, keep:12 }
+];
+async function refreshBackupStatus(){
+  const el = document.getElementById('backupStatus');
+  if (!folderIds.backup){ el.textContent = ''; return; }
+  try{
+    const q = encodeURIComponent(`'${folderIds.backup}' in parents and trashed=false`);
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1000&fields=files(name)`);
+    const names = ((await res.json()).files || []).map(f => f.name);
+    const count = t => names.filter(n => n.startsWith(t.prefix)).length;
+    const legacy = names.filter(n => n.startsWith('menu-backup-') && !BACKUP_TIERS.some(t => n.startsWith(t.prefix))).length;
+    el.innerHTML = `Backups: ${count(BACKUP_TIERS[0])} daily · ${count(BACKUP_TIERS[1])} weekly · ${count(BACKUP_TIERS[2])} monthly ` +
+      `(the newest ${BACKUP_TIERS.map(t=>(CONFIG.BACKUP_KEEP&&CONFIG.BACKUP_KEEP[t.id])||t.keep).join(' / ')} are kept automatically)` +
+      (legacy ? `<br>${legacy} older test backup${legacy>1?'s':''} (menu-backup-YYYY-MM-DD_hh-mm-ss.json) — no longer needed, you can delete ${legacy>1?'them':'it'} in Drive.` : '');
+  }catch(e){ el.textContent = ''; console.warn('Backup summary failed', e); }
+}
+let backupChecked = {};   // tier id -> period already confirmed this session (so most saves make no extra Drive calls)
+// Called just BEFORE a save overwrites the menu file. Each period (day / ISO week / month) gets ONE file
+// holding the menu as it stood before that period's first save; it is never overwritten. Older ones are trashed.
+async function ensureBackups(){
+  const keys = {}; BACKUP_TIERS.forEach(t => keys[t.id] = t.key());
+  const due = BACKUP_TIERS.filter(t => backupChecked[t.id] !== keys[t.id]);
+  if (!due.length) return [];
+  const q = encodeURIComponent(`'${folderIds.backup}' in parents and trashed=false`);
+  const res = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1000&fields=files(id,name)`);
+  const files = (await res.json()).files || [];
+  const have = new Set(files.map(f => f.name));
+  const missing = due.filter(t => !have.has(`${t.prefix}${keys[t.id]}.json`));
+  const created = [];
+  if (missing.length){
+    let snapshot;   // the menu as it is on Drive right now = the state before this save
+    try{ snapshot = await downloadJsonFile(CONFIG.MENU_FILE_ID); }
+    catch(e){ if (!lastSavedJson) throw e; snapshot = JSON.parse(lastSavedJson); }
+    for (const t of missing){
+      const name = `${t.prefix}${keys[t.id]}.json`;
+      const id = await createJsonFile(folderIds.backup, name, snapshot);
+      files.push({ id, name });
+      created.push(t.id);
+    }
+  }
+  due.forEach(t => backupChecked[t.id] = keys[t.id]);
+  // keep only the newest N of each tier (moved to Drive's Trash, so still recoverable for a while)
+  for (const t of BACKUP_TIERS){
+    const keep = (CONFIG.BACKUP_KEEP && CONFIG.BACKUP_KEEP[t.id]) || t.keep;
+    const mine = files.filter(f => f.name.startsWith(t.prefix) && f.name.endsWith('.json'))
+                      .sort((x, y) => y.name.localeCompare(x.name));
+    for (const old of mine.slice(keep)){
+      try{ await trashFile(old.id); }catch(e){ console.warn('Could not remove old backup', old.name, e); }
+    }
+  }
+  return created;
+}
+async function folderStatus(id){
+  if (!id) return 'notfound';
+  try{
+    const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,capabilities(canAddChildren)`);
+    const j = await res.json();
+    return j.capabilities && j.capabilities.canAddChildren === false ? 'readonly' : 'ok';
+  }catch(e){ console.error('Folder check failed', id, e); return 'error'; }
+}
 async function persist(showToast=true){
   state.meta.updated = new Date().toISOString();
+  const problems = saveNotes.splice(0);
+  let backedUp = [];
   try{
-    // rotate a timestamped backup before overwriting (best-effort, non-blocking of the main save)
-    if (folderIds.backup){
-      createJsonFile(folderIds.backup, `menu-backup-${Date.now()}.json`, state).catch(()=>{});
+    // 1) automatic backups (daily / weekly / monthly) — before the save overwrites the menu file
+    if (!folderIds.backup){
+      problems.push('NOT backed up — Backup folder not found (see Dashboard)');
+    } else {
+      try{ backedUp = await ensureBackups(); }
+      catch(e){
+        console.error('Backup failed', e);
+        problems.push('Backup FAILED — ' + e.message.slice(0,140));
+      }
     }
+    // 2) save the new menu
     await updateJsonFile(CONFIG.MENU_FILE_ID, state);
-    if (showToast) toast('Saved.');
+    lastSavedJson = JSON.stringify(state);
+    if (problems.length) toast('Saved, but: ' + problems.join(' · '));
+    else if (showToast) toast(backedUp.length ? 'Saved. Backup created (' + backedUp.join(', ') + ').' : 'Saved.');
+    if (backedUp.length) refreshBackupStatus();
   }catch(err){
     console.error(err);
     toast('Save failed: ' + err.message);
@@ -541,7 +709,10 @@ document.getElementById('dashAcceptToggle').onchange = async (e) => {
 };
 document.getElementById('refreshBtn').onclick = async () => {
   state = await downloadJsonFile(CONFIG.MENU_FILE_ID);
+  lastSavedJson = JSON.stringify(state);
+  const needsSave = normalizeState();
   applyTheme(); renderAll(); toast('Refreshed from Drive.');
+  if (needsSave) await persist(false);
 };
 
 /* ==========================================================================
@@ -550,7 +721,8 @@ document.getElementById('refreshBtn').onclick = async () => {
 function renderCategories(){
   const list = document.getElementById('catList');
   list.innerHTML = '';
-  state.categories.sort((a,b)=>(a.order||0)-(b.order||0)).forEach((cat,i)=>{
+  state.categories = sortedCategories();
+  state.categories.forEach((cat,i)=>{
     const count = state.dishes.filter(d=>d.categoryId===cat.id).length;
     const row = document.createElement('div');
     row.className = 'cat-row';
@@ -578,7 +750,7 @@ function renderCategories(){
   });
   // keep select + filter pills in sync
   const sel = document.getElementById('dishCategory');
-  sel.innerHTML = state.categories.map(c=>`<option value="${c.id}">${c.icon||''} ${c.name}</option>`).join('');
+  sel.innerHTML = sortedCategories().map(c=>`<option value="${c.id}">${c.icon||''} ${c.name}</option>`).join('');
 }
 
 document.getElementById('addCatBtn').onclick = () => openCatModal(null);
@@ -601,7 +773,7 @@ document.getElementById('saveCatBtn').onclick = async () => {
     const c = state.categories.find(c=>c.id===editingCatId);
     c.name = name; c.icon = icon;
   } else {
-    state.categories.push({ id: uid(), name, icon, order: state.categories.length });
+    state.categories.push({ id: uid(), name, icon, order: state.categories.reduce((m,c)=>Math.max(m,c.order||0),-1)+1 });
   }
   closeCatModal(); renderCategories(); renderDishSection();
   await persist();
@@ -621,7 +793,7 @@ let activeDishFilter = 'all';
 function renderDishSection(){
   const filterEl = document.getElementById('dishCatFilter');
   filterEl.innerHTML = `<button class="cat-pill ${activeDishFilter==='all'?'active':''}" data-f="all">All (${state.dishes.length})</button>` +
-    state.categories.map(c=>{
+    sortedCategories().map(c=>{
       const n = state.dishes.filter(d=>d.categoryId===c.id).length;
       return `<button class="cat-pill ${activeDishFilter===c.id?'active':''}" data-f="${c.id}">${c.icon||''} ${c.name} (${n})</button>`;
     }).join('');
@@ -630,7 +802,7 @@ function renderDishSection(){
   });
 
   const grid = document.getElementById('dishGrid');
-  const items = state.dishes.filter(d => activeDishFilter==='all' || d.categoryId===activeDishFilter);
+  const items = dishesInMenuOrder(state.dishes.filter(d => activeDishFilter==='all' || d.categoryId===activeDishFilter));
   grid.innerHTML = items.map(d=>{
     const cat = state.categories.find(c=>c.id===d.categoryId);
     const thumb = d.imageFileId
@@ -649,7 +821,7 @@ function renderDishSection(){
     return `<div class="dish-card">
       ${thumb}
       <div class="body">
-        <div class="name-row"><span class="name">${esc(d.name)}</span><span class="price">${price}</span></div>
+        <div class="name-row"><span class="name"><span class="item-no">#${fmtCode(d.code||0)}</span>${esc(d.name)}</span><span class="price">${price}</span></div>
         <div class="hint">${cat ? (cat.icon||'')+' '+esc(cat.name) : '—'} ${d.active===false?'<span class=\"inactive-badge\">· Hidden</span>':''}</div>
         ${d.description ? `<div class="dish-desc">${esc(d.description)}</div>` : ''}
         ${subOptionsHtml}
@@ -706,6 +878,7 @@ function openDishModal(dish){
   editingDishId = dish ? dish.id : null;
   dishPendingImageBlob = null; dishRemovedImage = false;
   document.getElementById('dishModalTitle').textContent = dish ? 'Edit Dish' : 'Add New Dish';
+  document.getElementById('dishCodeLine').textContent = dish && dish.code ? `Item No. #${fmtCode(dish.code)} (permanent)` : 'Item No. will be assigned automatically when you save';
   document.getElementById('dishName').value = dish ? dish.name : '';
   document.getElementById('dishDesc').value = dish ? (dish.description||'') : '';
   document.getElementById('dishPriceLkr').value = dish?.price?.lkr ?? '';
@@ -734,7 +907,15 @@ document.getElementById('saveDishBtn').onclick = async () => {
   const categoryId = document.getElementById('dishCategory').value;
   if (!categoryId){ toast('Add a category first.'); return; }
 
-  let dish = editingDishId ? state.dishes.find(d=>d.id===editingDishId) : { id: uid(), order: state.dishes.length };
+  let dish;
+  if (editingDishId){ dish = state.dishes.find(d=>d.id===editingDishId); }
+  else {
+    // permanent, never-reused item code: counter only ever goes up (deleting a dish never frees its number)
+    const maxCode = state.dishes.reduce((m,d)=>Math.max(m, Number(d.code)||0), 0);
+    const code = Math.max(Number(state.meta.nextItemNo)||1, maxCode+1);
+    state.meta.nextItemNo = code + 1;
+    dish = { id: uid(), order: state.dishes.reduce((m,d)=>Math.max(m,d.order||0),-1)+1, code };
+  }
   dish.name = name;
   dish.description = document.getElementById('dishDesc').value.trim();
   dish.categoryId = categoryId;
@@ -759,7 +940,11 @@ document.getElementById('saveDishBtn').onclick = async () => {
     try{
       const oldImage = dish.imageFileId;
       dish.imageFileId = await uploadImageBlob(folderIds.dishImages, dishPendingImageBlob, `${dish.id}-${Date.now()}.webp`);
-      if (oldImage && folderIds.deleted) moveFile(oldImage, folderIds.dishImages, folderIds.deleted).catch(()=>{});
+      if (oldImage){
+        if (!folderIds.deleted) saveNotes.push('old photo left in DishImages — Deleted Images folder not found');
+        else { try{ await moveFile(oldImage, folderIds.dishImages, folderIds.deleted); }
+               catch(e){ console.error(e); saveNotes.push('old photo not moved to Deleted Images — ' + e.message.slice(0,100)); } }
+      }
     }catch(err){ toast('Photo upload failed: ' + err.message); }
   }
 
@@ -769,8 +954,10 @@ document.getElementById('saveDishBtn').onclick = async () => {
 document.getElementById('deleteDishBtn').onclick = async () => {
   if (!confirm('Delete this dish? This cannot be undone.')) return;
   const dish = state.dishes.find(d=>d.id===editingDishId);
-  if (dish?.imageFileId && folderIds.deleted && folderIds.dishImages){
-    moveFile(dish.imageFileId, folderIds.dishImages, folderIds.deleted).catch(()=>{});
+  if (dish?.imageFileId){
+    if (!folderIds.deleted || !folderIds.dishImages) saveNotes.push('photo left in DishImages — Deleted Images folder not found');
+    else { try{ await moveFile(dish.imageFileId, folderIds.dishImages, folderIds.deleted); }
+           catch(e){ console.error(e); saveNotes.push('photo not moved to Deleted Images — ' + e.message.slice(0,100)); } }
   }
   state.dishes = state.dishes.filter(d=>d.id!==editingDishId);
   closeDishModal(); renderDishSection(); renderCategories();
@@ -805,6 +992,7 @@ document.getElementById('saveProfileBtn').onclick = async () => {
     toast('Uploading logo…');
     state.profile.logoFileId = await uploadImageBlob(uploadTo, logoPendingBlob, `logo-${Date.now()}.webp`);
     logoPendingBlob = null;
+    qrLogoBitmap = undefined;
   }
   if (bannerPendingBlob){
     toast('Uploading banner…');
@@ -823,6 +1011,8 @@ function renderSettings(){
   document.getElementById('settAcceptToggle').checked = state.settings.acceptingOrders !== false;
   document.getElementById('kitchenOpen').value = state.settings.kitchenOpen || '06:00';
   document.getElementById('kitchenClose').value = state.settings.kitchenClose || '23:00';
+  document.getElementById('ordEmail').value = (state.settings.orders||{}).email || '';
+  document.getElementById('ordWhatsapp').value = (state.settings.orders||{}).whatsapp || '';
   document.getElementById('colorPrimary').value = state.settings.theme.primary;
   document.getElementById('colorSecondary').value = state.settings.theme.secondary;
   document.getElementById('colorPrimaryHex').textContent = state.settings.theme.primary;
@@ -855,6 +1045,7 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
   state.settings.acceptingOrders = document.getElementById('settAcceptToggle').checked;
   state.settings.kitchenOpen = document.getElementById('kitchenOpen').value;
   state.settings.kitchenClose = document.getElementById('kitchenClose').value;
+  state.settings.orders = { email: document.getElementById('ordEmail').value.trim(), whatsapp: document.getElementById('ordWhatsapp').value.trim() };
   state.settings.theme = {
     primary: document.getElementById('colorPrimary').value,
     secondary: document.getElementById('colorSecondary').value
@@ -867,17 +1058,108 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
 /* ==========================================================================
    QR CODE
    ========================================================================== */
-function qrImageUrl(size){
+function qrImageUrl(size){   // fallback only (used if the QR library could not load)
   const color = (state.settings.theme.primary || '#000000').replace('#','');
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&color=${color}&bgcolor=ffffff&data=${encodeURIComponent(CONFIG.GUEST_MENU_URL)}`;
 }
-function renderQr(){
-  document.getElementById('qrName').textContent = state.profile.name || CONFIG.RESTAURANT_NAME_FALLBACK;
+const MENU_TITLE = 'Guest Food & Beverage Menu';
+let qrLogoBitmap;            // undefined = not tried yet, null = none available
+let qrCardCanvas = null;
+async function getQrLogo(){
+  if (qrLogoBitmap !== undefined) return qrLogoBitmap;
+  qrLogoBitmap = null;
+  // 1) the logo uploaded in Profile (fetched with the admin sign-in so the picture can be exported)
+  if (state.profile.logoFileId){
+    try{
+      const r = await driveFetch(`https://www.googleapis.com/drive/v3/files/${state.profile.logoFileId}?alt=media`);
+      qrLogoBitmap = await createImageBitmap(await r.blob());
+      return qrLogoBitmap;
+    }catch(e){ console.warn('Profile logo not usable in QR', e); }
+  }
+  // 2) logo.png stored next to admin.html
+  try{
+    const r = await fetch('logo.png');
+    if (r.ok){ qrLogoBitmap = await createImageBitmap(await r.blob()); return qrLogoBitmap; }
+  }catch(e){}
+  return null;
+}
+function darkenHex(hex, k){
+  const h = /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#4C9D38';
+  return '#' + [1,3,5].map(i => Math.round(parseInt(h.slice(i,i+2),16)*k).toString(16).padStart(2,'0')).join('');
+}
+function rrect(g, x, y, w, h, r){   // rounded rectangle path (plain rectangle on very old browsers)
+  g.beginPath();
+  if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h);
+}
+async function buildQrCard(){
+  if (typeof qrcode === 'undefined') throw new Error('QR library not loaded');
+  const qr = qrcode(0, 'H');            // highest error correction, so a centre logo is safe
+  qr.addData(CONFIG.GUEST_MENU_URL); qr.make();
+  const n = qr.getModuleCount(), quiet = 4, W = 1000;
+  const m = Math.floor(840 / (n + 2*quiet)), sq = (n + 2*quiet) * m;
+  const x0 = Math.floor((W - sq) / 2), y0 = 40, H = y0 + sq + 250;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  // brand green, darkened so phone cameras read it reliably (pure brand green scans poorly)
+  g.fillStyle = darkenHex(state.settings.theme.primary, 0.6);
+  for (let r = 0; r < n; r++) for (let col = 0; col < n; col++)
+    if (qr.isDark(r, col)) g.fillRect(x0 + (col+quiet)*m, y0 + (r+quiet)*m, m, m);
+  // logo in the centre (about 6% of the code's area, well inside what error correction can recover)
+  const logo = await getQrLogo();
+  if (logo){
+    const L = Math.round(n*m*0.20), pad = Math.round(m*1.2), box = L + 2*pad;
+    const cx = x0 + sq/2, cy = y0 + sq/2, rad = Math.round(box*0.18);
+    g.fillStyle = '#ffffff';
+    rrect(g, cx-box/2, cy-box/2, box, box, rad); g.fill();
+    g.save();
+    rrect(g, cx-L/2, cy-L/2, L, L, Math.round(L*0.14)); g.clip();
+    const k = Math.min(L/logo.width, L/logo.height), dw = logo.width*k, dh = logo.height*k;
+    g.drawImage(logo, cx-dw/2, cy-dh/2, dw, dh);
+    g.restore();
+  }
+  // title lines under the code
+  try{ await document.fonts.load('700 54px Manrope'); await document.fonts.load('600 38px Manrope'); }catch(e){}
+  const name = state.profile.name || CONFIG.RESTAURANT_NAME_FALLBACK;
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  const line = (text, weight, size, color, y) => {
+    let px = size;
+    do { g.font = `${weight} ${px}px Manrope, sans-serif`; px -= 2; } while (g.measureText(text).width > W - 100 && px > 20);
+    g.fillStyle = color; g.fillText(text, W/2, y);
+  };
+  const base = y0 + sq;
+  line(name,        700, 56, '#1b231c', base + 75);
+  line(MENU_TITLE,  600, 40, '#3f4f42', base + 135);
+  line('Scan to view menu', 500, 30, '#6b7a6c', base + 195);
+  return c;
+}
+async function renderQr(){
   document.getElementById('qrUrlText').textContent = CONFIG.GUEST_MENU_URL;
-  document.getElementById('qrImgHolder').innerHTML = `<img src="${qrImageUrl(240)}" width="220" height="220" alt="Menu QR code">`;
+  const holder = document.getElementById('qrImgHolder');
+  holder.textContent = 'Preparing QR code…';
+  try{
+    qrCardCanvas = await buildQrCard();
+    qrCardCanvas.style.cssText = 'width:100%;max-width:320px;height:auto;border-radius:12px;border:1px solid var(--line);';
+    holder.replaceChildren(qrCardCanvas);
+  }catch(err){
+    console.error(err);
+    qrCardCanvas = null;
+    holder.innerHTML = `<img src="${qrImageUrl(240)}" width="220" height="220" alt="Menu QR code">`;
+    toast('Could not build the branded QR — showing the plain one.');
+  }
 }
 document.getElementById('downloadQrBtn').onclick = async () => {
-  const url = qrImageUrl(600); // higher-res for printing
+  if (qrCardCanvas){
+    qrCardCanvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.download = 'gaia-lake-menu-qr.png';
+      a.href = URL.createObjectURL(blob);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }, 'image/png');
+    return;
+  }
+  const url = qrImageUrl(600);
   try{
     const blob = await fetch(url).then(r=>r.blob());
     const a = document.createElement('a');
