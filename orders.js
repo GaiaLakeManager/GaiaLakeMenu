@@ -79,24 +79,31 @@ function orderText(o){   // human-readable order + one #GLORDER line the admin p
 }
 async function send(){
   const o = payload(), b = $('oSend'); b.disabled = true; b.textContent = 'Sending…';
-  try{
-    const c = new AbortController(), t = setTimeout(() => c.abort(), 15000);
-    const r = await fetch(CONFIG.ORDER_SCRIPT_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:JSON.stringify(o), signal:c.signal });
-    clearTimeout(t); const j = await r.json();
-    if (!j.ok){ if (j.reject){ showForm(j.error); return; } throw new Error(j.error); }
-    OS.lastId = o.id; OS.id = null; showDone(o.id);
-  }catch(e){ showFallback(o); }
+  let why = '';
+  for (let a = 0; a < 2; a++){                       // one automatic retry; safe because the server ignores a repeated order ID
+    let j = null;
+    try{
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+      const r = await fetch(CONFIG.ORDER_SCRIPT_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:JSON.stringify(o), signal:c.signal });
+      clearTimeout(t); j = await r.json();
+    }catch(e){ why = e.name === 'AbortError' ? 'timed out' : e.message; console.error('Order send failed:', e); }
+    if (j && j.ok){ OS.lastId = o.id; OS.id = null; showDone(o.id); return; }
+    if (j && j.reject){ showForm(j.error); return; }
+    if (j) why = j.error || 'server error';
+    if (a === 0){ b.textContent = 'Retrying…'; await new Promise(r => setTimeout(r, 2000)); }
+  }
+  showFallback(o, why);
 }
 function showDone(id){
   $('orderTitle').textContent = 'Order sent ✓';
   $('orderBody').innerHTML = `<p>Thank you, your order <b>${id}</b> has reached the kitchen. If anything is wrong, call us on the number at the top of the menu.</p>
     <div class="o-btns"><button class="btn-ghost" id="oAmend">Amend this order</button><button class="btn-main" id="oFinish">Done</button></div>`;
 }
-function showFallback(o){
+function showFallback(o, why){
   const t = orderText(o), s = (MENU.settings || {}).orders || {}, p = MENU.profile || {}, q = encodeURIComponent(t);
   const em = s.email || CONFIG.GUEST_ORDER_EMAIL, wa = (s.whatsapp || p.phone || '').replace(/\D/g, ''), ph = (p.phone || '').replace(/\s+/g, ''); OS.text = t;
   $('orderTitle').textContent = 'Couldn’t send automatically';
-  $('orderBody').innerHTML = `<p>Please send your order another way — the message is already written for you.</p><div class="fb">
+  $('orderBody').innerHTML = `<p>Please send your order another way — the message is already written for you.</p><p class="rv-m" style="opacity:.6;font-size:.72rem">Reason: ${esc(why || 'unknown')}</p><div class="fb">
     ${wa ? `<a class="btn-main" href="https://wa.me/${wa}?text=${q}">WhatsApp</a>` : ''}${em ? `<a class="btn-ghost" href="mailto:${esc(em)}?subject=${encodeURIComponent('Food order ' + o.id)}&body=${q}">Email</a>` : ''}
     ${ph ? `<a class="btn-ghost" href="sms:${ph}?&body=${q}">SMS</a><a class="btn-ghost" href="tel:${ph}">Call</a>` : ''}<button class="btn-ghost" id="oCopy">Copy text</button></div>
     <pre class="fb-t">${esc(t)}</pre><div class="o-btns"><button class="btn-ghost" id="oBack">Back</button><button class="btn-main" id="oFinish">I’ve sent it</button></div>`;
