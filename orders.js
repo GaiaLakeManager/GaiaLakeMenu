@@ -5,15 +5,17 @@ const $ = id => document.getElementById(id);
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Colombo' });
 const dishBy = c => (MENU.dishes || []).find(d => Number(d.code) === Number(c));
 const code3 = c => '#' + String(c).padStart(3, '0');
-const lkr = n => 'LKR ' + Number(n).toLocaleString('en-US');
+const usd = n => 'USD ' + Number(n).toFixed(2);   // all order prices are in USD; LKR conversion happens at final billing
 const lines = () => [...OS.cart.values()];
-function unit(c, s){ const d = dishBy(c); if (!d) return 0; const o = s && (d.subOptions || []).find(x => x.name === s); return Number((o ? o.price : d.price)?.lkr) || 0; }
-const total = () => lines().reduce((t, l) => t + unit(l.c, l.s) * l.q, 0);
-function addBtn(c, s){ return ORDERING && c ? `<button class="add-btn" data-c="${c}" data-s="${esc(s)}">+ Add</button>` : ''; }
+function unit(c, s){ const d = dishBy(c); if (!d) return 0; const o = s && (d.subOptions || []).find(x => x.name === s); return Number((o ? o.price : d.price)?.usd) || 0; }
+const total = () => Math.round(lines().reduce((t, l) => t + unit(l.c, l.s) * l.q, 0) * 100) / 100;
+function addBtn(c, s){ return ORDERING && c && unit(c, s) > 0 ? `<button class="add-btn" data-c="${c}" data-s="${esc(s)}">+ Add</button>` : ''; }
+const totalTxt = () => usd(total());
+function syncBtns(){ document.querySelectorAll('.add-btn').forEach(b => { const l = OS.cart.get(b.dataset.c + '|' + b.dataset.s); b.textContent = l ? '✓ Added (' + l.q + ')' : '+ Add'; b.classList.toggle('on', !!l); }); }
 function bar(){
   const n = lines().reduce((t, l) => t + l.q, 0);
   $('cartBar').classList.toggle('hidden', !n);
-  $('cartSummary').textContent = `${n} item${n > 1 ? 's' : ''} · ${lkr(total())}`;
+  $('cartSummary').textContent = `${n} item${n > 1 ? 's' : ''} · ${usd(total())}`; syncBtns();
 }
 function initOrdering(){
   bar();
@@ -22,10 +24,10 @@ function initOrdering(){
 document.addEventListener('click', e => {
   const b = e.target.closest('.add-btn'); if (!b) return;
   const k = b.dataset.c + '|' + b.dataset.s, l = OS.cart.get(k) || { c:b.dataset.c, s:b.dataset.s, q:0, d:'', t:'' };
-  l.q = Math.min(50, l.q + 1); OS.cart.set(k, l); bar(); b.textContent = '✓ Added (' + l.q + ')';
+  l.q = Math.min(50, l.q + 1); OS.cart.set(k, l); bar();
 });
-$('openCart').onclick = () => { showForm(); $('orderModal').classList.add('open'); };
-const closeO = () => $('orderModal').classList.remove('open');
+$('openCart').onclick = () => { showForm(); $('orderModal').classList.add('open'); document.body.classList.add('o-lock'); $('orderModal').scrollTop = 0; };
+const closeO = () => { $('orderModal').classList.remove('open'); document.body.classList.remove('o-lock'); };
 
 function grab(){
   if (!$('fName')) return;
@@ -33,20 +35,21 @@ function grab(){
   try{ localStorage.setItem('gl-guest-details', JSON.stringify({ name:OS.f.name, room:OS.f.room, phone:OS.f.phone })); }catch(e){}
 }
 function showForm(err){
-  const f = OS.f;
+  const f = OS.f, rooms = (MENU.settings || {}).rooms || [];
+  const roomIn = rooms.length ? `<select id="fRoom"><option value="">Select room…</option>${rooms.map(r => `<option${r === f.room ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select>` : `<input id="fRoom" value="${esc(f.room || '')}">`;
   $('orderTitle').textContent = OS.amend ? 'Amend your order' : 'Your order';
   $('orderBody').innerHTML = (err ? `<div class="o-err">${esc(err)}</div>` : '') +
     ([...OS.cart.entries()].map(([k, l]) => `<div class="ol" data-k="${esc(k)}">
       <div class="ol-top"><b><span class="item-no">${code3(l.c)}</span> ${esc(dishBy(l.c)?.name || '')}</b>${l.s ? `<small>${esc(l.s)}</small>` : ''}</div>
-      <div class="ol-ctl"><button class="q" data-d="-1">−</button><span>${l.q}</span><button class="q" data-d="1">+</button><span class="ol-p">${lkr(unit(l.c, l.s) * l.q)}</span><button class="q rm" data-rm="1">×</button></div>
-      <div class="ol-when">Different date/time for this item? <input type="date" class="od" min="${today()}" value="${l.d}"> <input type="time" class="ot" value="${l.t}"></div></div>`).join('') || '<p>Your order is empty.</p>') +
-    `<div class="o-total">Total <b>${lkr(total())}</b></div>
+      <div class="ol-ctl"><button class="q" data-d="-1">−</button><span>${l.q}</span><button class="q" data-d="1">+</button><span class="ol-p">${usd(unit(l.c, l.s) * l.q)}</span><button class="q rm" data-rm="1">×</button></div>
+      <div class="ol-when"><span>Different date/time for this item? (optional)</span><div class="ol-when-in"><input type="date" class="od" min="${today()}" value="${l.d}"><input type="time" class="ot" value="${l.t}"></div></div></div>`).join('') || '<p>Your order is empty.</p>') +
+    `<div class="o-total"><span>Total</span><b>${totalTxt()}</b></div>
     <div class="o-grid"><label>Dining date<input type="date" id="fDate" min="${today()}" value="${f.date || ''}"></label><label>Dining time<input type="time" id="fTime" value="${f.time || ''}"></label></div>
     <label>Your name<input id="fName" autocomplete="name" value="${esc(f.name || '')}"></label>
-    <div class="o-grid"><label>Room number<input id="fRoom" value="${esc(f.room || '')}"></label><label>Phone<input id="fPhone" type="tel" autocomplete="tel" value="${esc(f.phone || '')}"></label></div>
+    <div class="o-grid"><label>Room number${roomIn}</label><label>Phone<input id="fPhone" type="tel" autocomplete="tel" value="${esc(f.phone || '')}"></label></div>
     <label>Note (optional)<textarea id="fNote">${esc(f.note || '')}</textarea></label>
     <input class="hp" id="fWeb" tabindex="-1" autocomplete="off" aria-hidden="true" value="${esc(f.web || '')}">
-    <div class="o-btns"><button class="btn-ghost" id="oClose">Close</button><button class="btn-main" id="oReview">Review order</button></div>`;
+    <div class="o-btns"><button class="btn-ghost danger" id="oCancel">Cancel order</button><button class="btn-ghost" id="oClose">Go back</button><button class="btn-main" id="oReview">Review order</button></div>`;
 }
 function check(){
   const f = OS.f, ph = (f.phone || '').replace(/[\s\-()]/g, '');
@@ -59,8 +62,8 @@ function check(){
 }
 function showReview(){
   const f = OS.f; $('orderTitle').textContent = 'Review your order';
-  $('orderBody').innerHTML = `<div class="rv">${lines().map(l => `<div class="rv-l"><span>${l.q}× <span class="item-no">${code3(l.c)}</span> ${esc(dishBy(l.c)?.name || '')}${l.s ? ' – ' + esc(l.s) : ''}${l.d || l.t ? `<small>${l.d || f.date} at ${l.t || f.time}</small>` : ''}</span><b>${lkr(unit(l.c, l.s) * l.q)}</b></div>`).join('')}
-    <div class="rv-l tot"><span>Total</span><b>${lkr(total())}</b></div></div>
+  $('orderBody').innerHTML = `<div class="rv">${lines().map(l => `<div class="rv-l"><span>${l.q}× <span class="item-no">${code3(l.c)}</span> ${esc(dishBy(l.c)?.name || '')}${l.s ? ' – ' + esc(l.s) : ''}${l.d || l.t ? `<small>${l.d || f.date} at ${l.t || f.time}</small>` : ''}</span><b>${usd(unit(l.c, l.s) * l.q)}</b></div>`).join('')}
+    <div class="rv-l tot"><span>Total</span><b>${totalTxt()}</b></div></div>
     <p class="rv-m"><b>${esc(f.name)}</b> · Room ${esc(f.room)} · ${esc(f.phone)}<br>Dining ${f.date} at ${f.time}${f.note ? '<br>Note: ' + esc(f.note) : ''}</p>
     <div class="o-btns"><button class="btn-ghost" id="oEdit">Edit</button><button class="btn-main" id="oSend">Confirm &amp; send</button></div>`;
 }
@@ -75,7 +78,7 @@ function orderText(o){   // human-readable order + one #GLORDER line the admin p
   const j = btoa(unescape(encodeURIComponent(JSON.stringify(clean)))), ck = [...j].reduce((h, ch) => (h * 33 + ch.charCodeAt(0)) >>> 0, 5381).toString(36);
   return `Gaia Lake food order ${o.id}${o.amend ? ' (amends ' + o.amend + ')' : ''}\n${o.name}, Room ${o.room}, ${o.phone}\nDining: ${o.date} ${o.time}\n` +
     o.items.map(i => `${i.q}x ${code3(i.c)} ${dishBy(i.c)?.name || ''}${i.s ? ' - ' + i.s : ''}${i.d || i.t ? ` (${i.d || o.date} ${i.t || o.time})` : ''}`).join('\n') +
-    `\nTotal ${lkr(o.total)}${o.note ? '\nNote: ' + o.note : ''}\n#GLORDER ${j}.${ck}`;
+    `\nTotal ${usd(o.total)}${o.note ? '\nNote: ' + o.note : ''}\n#GLORDER ${j}.${ck}`;
 }
 async function send(){
   const o = payload(), b = $('oSend'); b.disabled = true; b.textContent = 'Sending…';
@@ -108,7 +111,7 @@ function showFallback(o, why){
     ${ph ? `<a class="btn-ghost" href="sms:${ph}?&body=${q}">SMS</a><a class="btn-ghost" href="tel:${ph}">Call</a>` : ''}<button class="btn-ghost" id="oCopy">Copy text</button></div>
     <pre class="fb-t">${esc(t)}</pre><div class="o-btns"><button class="btn-ghost" id="oBack">Back</button><button class="btn-main" id="oFinish">I’ve sent it</button></div>`;
 }
-function finish(){ OS.cart.clear(); OS.amend = null; OS.id = null; OS.f.date = OS.f.time = OS.f.note = ''; bar(); document.querySelectorAll('.add-btn').forEach(b => b.textContent = '+ Add'); closeO(); }
+function finish(){ OS.cart.clear(); OS.amend = null; OS.id = null; OS.f.date = OS.f.time = OS.f.note = ''; bar(); closeO(); }
 $('orderBody').addEventListener('click', e => {
   const t = e.target, row = t.closest('.ol');
   if (t.classList.contains('q') && row){
@@ -116,7 +119,7 @@ $('orderBody').addEventListener('click', e => {
     if (t.dataset.rm || l.q + d < 1) OS.cart.delete(row.dataset.k); else l.q = Math.min(50, l.q + d);
     bar(); showForm(); return;
   }
-  ({ oClose:closeO, oReview:() => { grab(); const m = check(); m ? showForm(m) : showReview(); }, oEdit:() => showForm(), oSend:send,
+  ({ oClose:closeO, oCancel:() => { if (confirm('Cancel this order and clear all your selections?')) finish(); }, oReview:() => { grab(); const m = check(); m ? showForm(m) : showReview(); }, oEdit:() => showForm(), oSend:send,
      oBack:showReview, oFinish:finish, oAmend:() => { OS.amend = OS.lastId; showForm(); },
      oCopy:() => { navigator.clipboard?.writeText(OS.text).then(() => t.textContent = 'Copied ✓').catch(() => {}); } })[t.id]?.();
 });

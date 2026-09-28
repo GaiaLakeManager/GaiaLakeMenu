@@ -52,7 +52,7 @@ const CONFIG = {
   GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
   // Guest ordering (v2.0): the Apps Script web-app URL (…/exec) and the private Orders folder ID (owned by the orders account).
-  ORDER_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzB0zcOSoT76o5p9E7uDNzfserKz_yYci9d7-nVZHqlrL924Yxb01_K1a0a9lx7IVGjhg/exec",
+  ORDER_SCRIPT_URL: "",
   ORDERS_FOLDER_ID: "1JIYhb80EuLtRGHBU0PPItqgZH_XxFH6f",
   // Email guests see and use in the fallback "Email" button (Admin → Settings → For orders overrides it if filled in).
   GUEST_ORDER_EMAIL: "priyagaialake@gmail.com",
@@ -61,6 +61,6 @@ const CONFIG = {
 
   // --- App version & What's New (Claude updates these two lines on every release —
   // admin no longer needs to type a version number anywhere) -----------------
-  APP_VERSION: "2.0",
-  WHATS_NEW_LATEST: "Guests can now order from the menu: pick items, dining date/time, room, name and phone, review, then send straight to the kitchen (with WhatsApp / email / SMS / call fallback). Admin Settings has a new For orders section."
+  APP_VERSION: "2.0.2",
+  WHATS_NEW_LATEST: "Orders are now priced in USD everywhere (guest order window, kitchen alerts, saved orders). LKR conversion happens at final billing."
 };

@@ -149,10 +149,10 @@
           <h3>Brand Colours</h3>
           <div class="field-row">
             <div class="field"><label>Primary Colour</label>
-              <div class="color-field"><input type="color" id="colorPrimary" value="#4C9D38"><span id="colorPrimaryHex" class="hint">#4C9D38</span></div>
+              <div class="color-field"><input type="color" id="colorPrimary" value="#4C9D38"><input type="text" id="colorPrimaryHex" class="hex-in" value="#4C9D38" spellcheck="false" aria-label="Primary colour hex code"></div>
             </div>
             <div class="field"><label>Secondary Colour</label>
-              <div class="color-field"><input type="color" id="colorSecondary" value="#1E9BD7"><span id="colorSecondaryHex" class="hint">#1E9BD7</span></div>
+              <div class="color-field"><input type="color" id="colorSecondary" value="#1E9BD7"><input type="text" id="colorSecondaryHex" class="hex-in" value="#1E9BD7" spellcheck="false" aria-label="Secondary colour hex code"></div>
             </div>
           </div>
           <div class="hint">Applied to both this dashboard and the guest-facing menu.</div>
@@ -165,6 +165,16 @@
             <div class="field"><label>Orders WhatsApp number</label><input type="tel" id="ordWhatsapp" placeholder="+94 77 291 1501"></div>
           </div>
           <div class="hint">This is the address guests see. The private address that receives the order emails is set in the Apps Script (ORDER_EMAIL). Used only for the guest's fallback buttons (WhatsApp / Email) if an order can't be sent directly. These two values are visible in the public menu data. The WhatsApp number defaults to the bungalow phone in Profile if left empty.</div>
+        </div>
+
+        <div class="panel-box">
+          <h3>Room Numbers</h3>
+          <div class="tag-picker" id="roomManageList"></div>
+          <div class="tag-add-row">
+            <input type="text" id="newRoomInput" placeholder="e.g. 101, 102, Villa 3">
+            <button class="btn btn-sm" id="addRoomBtn">+ Add Room</button>
+          </div>
+          <div class="hint">Guests pick their room from this list when ordering. Separate several with commas (up to 10 characters each). Leave empty to let guests type it.</div>
         </div>
 
         <div class="panel-box">
@@ -1015,8 +1025,9 @@ function renderSettings(){
   document.getElementById('ordWhatsapp').value = (state.settings.orders||{}).whatsapp || '';
   document.getElementById('colorPrimary').value = state.settings.theme.primary;
   document.getElementById('colorSecondary').value = state.settings.theme.secondary;
-  document.getElementById('colorPrimaryHex').textContent = state.settings.theme.primary;
-  document.getElementById('colorSecondaryHex').textContent = state.settings.theme.secondary;
+  document.getElementById('colorPrimaryHex').value = state.settings.theme.primary;
+  document.getElementById('colorSecondaryHex').value = state.settings.theme.secondary;
+  renderRooms();
   document.getElementById('whatsNewVersion').textContent = 'v' + CONFIG.APP_VERSION;
   document.getElementById('whatsNewSummary').textContent = CONFIG.WHATS_NEW_LATEST || '';
   renderTagPicker(document.getElementById('tagManageList'), []); // display-only list below
@@ -1031,8 +1042,32 @@ function renderSettings(){
     };
   });
 }
-document.getElementById('colorPrimary').oninput = e => { document.getElementById('colorPrimaryHex').textContent = e.target.value; document.documentElement.style.setProperty('--brand-1', e.target.value); };
-document.getElementById('colorSecondary').oninput = e => { document.getElementById('colorSecondaryHex').textContent = e.target.value; document.documentElement.style.setProperty('--brand-2', e.target.value); };
+document.getElementById('colorPrimary').oninput = e => { document.getElementById('colorPrimaryHex').value = e.target.value; document.documentElement.style.setProperty('--brand-1', e.target.value); };
+document.getElementById('colorSecondary').oninput = e => { document.getElementById('colorSecondaryHex').value = e.target.value; document.documentElement.style.setProperty('--brand-2', e.target.value); };
+[['Primary','--brand-1'],['Secondary','--brand-2']].forEach(([n,v]) => {     // type a hex code instead of using the picker
+  const h = document.getElementById('color'+n+'Hex');
+  const norm = () => { let x = h.value.trim().replace(/\s+/g,''); if (x && x[0] !== '#') x = '#' + x;
+    if (/^#[0-9a-fA-F]{3}$/.test(x)) x = '#' + x.slice(1).split('').map(c => c + c).join('');
+    return /^#[0-9a-fA-F]{6}$/.test(x) ? x.toLowerCase() : null; };
+  const apply = () => { const x = norm(); if (x){ document.getElementById('color'+n).value = x; document.documentElement.style.setProperty(v, x); } return x; };
+  h.oninput = apply;
+  h.onpaste = () => setTimeout(() => { const x = apply(); if (x) h.value = x; }, 0);
+  h.onfocus = () => h.select();
+  h.onchange = h.onblur = () => { const x = apply(); h.value = x || document.getElementById('color'+n).value; };
+});
+function renderRooms(){
+  const rs = state.settings.rooms || [], el = document.getElementById('roomManageList');
+  el.innerHTML = rs.map(r => `<span class="tag-chip selected">${esc(r)} <span data-delroom="${esc(r)}" style="cursor:pointer;margin-left:4px;">×</span></span>`).join('') || '<span class="hint">No rooms added yet — guests will type their room number.</span>';
+  el.querySelectorAll('[data-delroom]').forEach(x => { x.onclick = async () => { state.settings.rooms = rs.filter(r => r !== x.dataset.delroom); renderRooms(); await persist(false); }; });
+}
+document.getElementById('addRoomBtn').onclick = async () => {
+  const inp = document.getElementById('newRoomInput'), add = inp.value.split(',').map(s => s.trim().slice(0,10)).filter(Boolean);
+  if (!add.length) return;
+  const rs = state.settings.rooms || [];
+  add.forEach(r => { if (!rs.includes(r)) rs.push(r); });
+  rs.sort((x,y) => x.localeCompare(y, undefined, {numeric:true}));
+  state.settings.rooms = rs; inp.value = ''; renderRooms(); await persist(false);
+};
 document.getElementById('addTagBtn').onclick = async () => {
   const v = document.getElementById('newTagInput').value.trim();
   if (!v) return;

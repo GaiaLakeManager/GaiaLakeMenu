@@ -205,7 +205,7 @@ function renderCard(d){
     subOptionsBlock = `<div class="sub-options">${d.subOptions.map(o => {
       const oUsd = o.price && o.price.usd ? `<span class="usd">${money(o.price.usd,'USD')}</span>` : '';
       const oLkr = o.price ? money(o.price.lkr,'LKR') : '';
-      return `<div class="sub-option-row"><span class="sub-name">${esc(o.name)}</span><span class="price">${oLkr}${oUsd}</span>${addBtn(d.code,o.name)}</div>`;
+      return `<div class="sub-option-row"><span class="sub-name">${esc(o.name)}</span><span class="price">${oLkr}${oUsd}</span></div>${addBtn(d.code,o.name) ? `<div class="sub-add">${addBtn(d.code,o.name)}</div>` : ''}`;
     }).join('')}</div>`;
   } else {
     const usd = d.price && d.price.usd ? `<span class="usd">${money(d.price.usd,'USD')}</span>` : '';

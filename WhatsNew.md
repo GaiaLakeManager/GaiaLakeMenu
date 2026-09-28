@@ -1,5 +1,52 @@
 # Gaia Lake Menu — What's New
 
+## v2.0.2 — 28 Sep 2026
+- **Orders are now in USD.** The order window, review screen, kitchen Telegram/email alerts and the saved order files all use USD prices; each saved order has `currency: "USD"`. Conversion to LKR is left for final billing. The guest menu still shows both prices.
+- An item without a USD price cannot be added to an order (its "+ Add" button is hidden), and the script refuses it. Set the USD price in Admin to make it orderable.
+- The fallback message (`#GLORDER`) shows the total in USD. Update `Code.gs` in Apps Script and deploy a New version.
+
+## v2.0.1 — 28 Sep 2026
+- "+ Add" now sits on its own line below the price (sub-option name and price stay on one line as before). Added items show "✓ Added (n)" and stay in sync with the order.
+- Order window: the menu behind is blurred, "Close" is now "Go back" (keeps your selections) and a new "Cancel order" clears them and resets the menu buttons. Better spacing for date/time on phones, tablets and PCs; the total also shows the approximate USD amount when every item has a USD price. Orders are charged in LKR.
+- Room number is now a dropdown. Manage the list in Admin → Settings → Room Numbers (falls back to typing if the list is empty).
+- Admin → Settings → Brand Colours: type a hex code as well as using the colour picker.
+
+## v2.0 — 28 Sep 2026 (guest ordering, part 1)
+- **Guests can order.** Every dish (or each sub-option) has a "+ Add" button; a bar at the bottom shows the running total. The order window has quantity, dining date and time for the whole order (with an optional different date/time per item), room number, name and phone. A Review screen with Edit and Confirm & send follows.
+- **Sending.** The order goes to a Google Apps Script web app (new file `Code.gs`), which re-checks every price against the live menu, validates room and phone, ignores bots (hidden trap field, rate limit), saves the order as a file in the private Orders folder, emails the orders address and sends a Telegram message.
+- **If sending fails**, the guest gets buttons for WhatsApp, Email, SMS, Call and Copy text, with the order already written out, including a `#GLORDER` line for the Admin paste box (coming in the next drop).
+- **Amend.** After sending, "Amend this order" creates a new order that points back to the earlier order number.
+- Admin → Settings has a new **For orders** section (orders email and WhatsApp number).
+- New files: `orders.js` (guest ordering code, loaded by index.html) and `Code.gs` (paste into Apps Script). config.js has two new lines: `ORDER_SCRIPT_URL` and `ORDERS_FOLDER_ID`.
+- Not in this drop yet: Admin Orders tab (list, auto-refresh, Pending/Served/Billed/Paid) and the `#GLORDER` paste box.
+
+## v1.7 — 28 Sep 2026
+- **Backups no longer pile up.** The Backup folder now uses the same tiered system as the Inventory app: one backup for each day, week and month, holding the menu as it was before that period's first save. The newest 14 daily, 8 weekly and 12 monthly copies are kept and older ones are moved to Drive's Trash automatically. Files are named `menu-backup-daily-YYYY-MM-DD.json`, `menu-backup-weekly-YYYY-Www.json` and `menu-backup-monthly-YYYY-MM.json`. The Dashboard shows how many of each exist. The earlier per-save test files (`menu-backup-YYYY-MM-DD_hh-mm-ss.json`) are left alone and can be deleted by hand.
+- **One version number for both pages.** The version in config.js and this file covers index.html and admin.html together. Admin now shows it in a footer at the bottom of the left menu, with the same developer and copyright line and colours as the guest page.
+- Admin page names updated: "Gaia Lake - Kandalama", "Guest Food & Beverage Menu", "Admin Control Panel" on the sign-in screen, the sidebar and the browser tab.
+- Added a dark/light mode button to the Admin top bar (remembered separately from the guest page).
+- QR code page: the QR is now generated inside the page (no outside QR service). It has your logo in the centre, and the restaurant name, "Guest Food & Beverage Menu" and "Scan to view menu" below it; the downloaded PNG includes all of that. The code colour is a darker shade of the brand green because the pure brand green scanned poorly in testing.
+- Guest menu dark/light button: on phones or PCs set to dark mode, the first tap could appear to do nothing. It now always follows what the page is actually showing.
+
+## v1.7 — 28 Sep 2026
+- Backups now follow the same system as the Inventory app instead of creating a new file on every save. There is one backup per day, one per week and one per month (for example `menu-backup-daily-2026-09-28.json`, `menu-backup-weekly-2026-W40.json`, `menu-backup-monthly-2026-09.json`).
+- Each file holds the menu as it stood before that period's first save, and is never overwritten. If a backup for the period already exists (even one made from another device), nothing new is created.
+- Only the newest 14 daily, 8 weekly and 12 monthly backups are kept. Older ones are moved to Drive's Trash automatically. The limits can be changed with BACKUP_KEEP in config.js.
+- Dates use local time, so a save just after midnight goes into the correct day.
+- Backup files from v1.6 (named with a date and time, one per save) are left alone; you can delete them by hand.
+
+## v1.6 — 28 Sep 2026
+- Fixed backups and deleted-photo handling failing silently. Before, if the Backup or Deleted Images folder could not be found or written to, nothing happened and no message appeared. Now every save says whether a backup was created, and any problem is shown in the message.
+- Admin Dashboard now shows the status of the DishImages, Backup and Deleted Images folders (found, view-only, or not found) each time you sign in.
+- A backup now keeps the menu as it was before the save (previously it copied the new version), so it can be used to go back a step. Backup files are named with your local date and time.
+- New optional settings in config.js, BACKUP_FOLDER_ID and DELETED_IMAGES_FOLDER_ID, for folders that are not inside GuestView.
+
+## v1.5 — 27 Sep 2026
+- Every dish now has a permanent, sequential item code (#001, #002 …). Numbers come from a counter that only goes up, so a code is never reused, even after the dish is deleted. Existing dishes were numbered once in menu order (category order, then dish order) the first time the admin page loads after this update. Codes show on Admin dish cards, in the Add/Edit Dish window, and as a small tag on the guest menu photo.
+- Dishes are now listed in category order (Breakfast … Soup) in both Admin (including the "All" view) and the guest menu. Category order is also cleaned up automatically so duplicate positions can no longer scramble it.
+- Dish price on the top line now uses the same font and size as sub-option prices (this was visible on PC).
+- Added "Rise & Shine Inclusions" (complimentary morning Ceylon tea or coffee and seasonal fresh fruits with breakfast orders) as the first bullet of the guest ordering policy note.
+
 ## v1.4 — 26 Sep 2026
 - Fixed the dark/light toggle button, which stopped working after the v1.3 style.css split (the dark-mode colour override was targeting the wrong element once the base colours moved onto the page's `<body>`).
 - Admin → Menu → Dishes now shows each dish's full description and, for dishes with sub-options, every sub-option's own price — nothing is hidden behind an "N options" count anymore.

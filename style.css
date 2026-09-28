@@ -1,3 +1,4 @@
+:root{--brand-1:#4C9D38;--brand-2:#1E9BD7;}   /* defaults only; the pages set the saved colours on <html> (inline) */
 /* ==========================================================================
    Gaia Lake Bungalow — Digital Menu System — Shared Stylesheet
    Loaded by BOTH the guest menu (index.html) and the admin dashboard
@@ -15,7 +16,6 @@ img{max-width:100%;}
    ========================================================================== */
 
 body.guest-menu{
-  --brand-1:#4C9D38; --brand-2:#1E9BD7;
   --cream:#fbf8f1; --paper:#ffffff; --ink:#1c2b22; --ink-soft:#5b6b60;
   --line:#e7e0d2; --accent:#e08a3c; --danger:#c0392b;
   margin:0;background:var(--cream);color:var(--ink);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;
@@ -124,7 +124,6 @@ html[data-theme="dark"] .sub-option-row{border-top-color:var(--line);}
    ========================================================================== */
 
 body.admin-app{
-  --brand-1:#4C9D38; --brand-2:#1E9BD7;
   --bg:#f4f6f3; --panel:#ffffff; --ink:#1b231c; --ink-soft:#6b7a6c; --line:#e4e9e2;
   --danger:#c0392b; --danger-bg:#fbe7e4;
   margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;
@@ -312,6 +311,7 @@ html[data-theme="dark"] body.admin-app .dropzone{background:#141a15;}
 html[data-theme="dark"] body.admin-app .dish-card .thumb,
 html[data-theme="dark"] body.admin-app .dish-card .thumb-ph{background:#232c23;}
 html[data-theme="dark"] body.admin-app .slider{background:#3a463a;}
+html[data-theme="dark"] body.admin-app .switch input:checked + .slider{background:var(--brand-1);}
 html[data-theme="dark"] body.admin-app .tag-chip.selected{background:var(--brand-1);}
 html[data-theme="dark"] body.admin-app #toast{background:#2f3a2f;}
 
@@ -320,17 +320,20 @@ html[data-theme="dark"] body.admin-app #toast{background:#2f3a2f;}
    GUEST ORDERING (v2.0) — cart bar, order window
    ========================================================================== */
 .add-btn{border:1px solid var(--brand-1);background:none;color:var(--brand-1);font:700 .72rem 'Manrope',sans-serif;border-radius:999px;padding:4px 10px;cursor:pointer;white-space:nowrap;align-self:flex-start;}
-.card .body > .add-btn{margin-top:6px;}
-.sub-option-row .add-btn{margin-left:8px;flex:0 0 auto;}
+.card .body > .add-btn{display:block;margin:8px 0 0 auto;}
+.sub-add{text-align:right;margin:2px 0 4px;}
+.add-btn.on{background:var(--brand-1);color:#fff;}
 .cart-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;z-index:30;display:flex;align-items:center;justify-content:space-between;
   gap:10px;background:var(--brand-1);color:#fff;border-radius:14px;padding:10px 12px 10px 16px;font-weight:700;font-size:.9rem;box-shadow:0 6px 22px rgba(0,0,0,.25);}
 .cart-bar button{border:none;background:#fff;color:var(--brand-1);font:800 .82rem 'Manrope',sans-serif;border-radius:10px;padding:8px 14px;cursor:pointer;}
-.o-back{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:none;overflow-y:auto;padding:14px;}
+.o-back{position:fixed;inset:0;z-index:60;background:rgba(20,28,22,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px;padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));}
+body.o-lock{overflow:hidden;}
+.o-modal{margin-bottom:14px;}
 .o-back.open{display:block;}
 .o-modal{background:var(--paper);color:var(--ink);border-radius:18px;max-width:520px;margin:0 auto;padding:20px 18px;}
 .o-modal h2{margin:0 0 12px;font-size:1.2rem;color:var(--brand-1);}
 .o-modal label{display:block;font-size:.78rem;font-weight:700;margin-bottom:10px;}
-.o-modal input,.o-modal textarea{display:block;width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--cream);color:var(--ink);font:500 .9rem 'Manrope',sans-serif;}
+.o-modal select,.o-modal input,.o-modal textarea{display:block;width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--cream);color:var(--ink);font:500 .9rem 'Manrope',sans-serif;}
 .o-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .hp{position:absolute !important;left:-9999px;width:1px !important;height:1px;opacity:0;}
 .ol{border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin-bottom:8px;}
@@ -355,3 +358,16 @@ html[data-theme="dark"] body.admin-app #toast{background:#2f3a2f;}
 .fb{display:flex;flex-wrap:wrap;gap:8px;}
 .fb-t{white-space:pre-wrap;word-break:break-all;font-size:.68rem;max-height:160px;overflow:auto;background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:12px;}
 body.guest-menu{padding-bottom:calc(70px + env(safe-area-inset-bottom,0px));}
+
+.o-modal input,.o-modal select,.o-modal textarea{font-size:16px !important;min-width:0;box-sizing:border-box;min-height:42px;}
+.o-modal textarea{min-height:64px;resize:vertical;}
+.o-modal input[type=date],.o-modal input[type=time]{-webkit-appearance:none;appearance:none;}
+.ol-when{margin-top:8px;}
+.ol-when-in{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.ol-when-in input{flex:1 1 130px;width:auto !important;margin:0 !important;min-height:38px !important;font-size:14px !important;}
+.o-total small,.rv-l small.usd{font-weight:500;color:var(--ink-soft);}
+.o-btns{flex-wrap:wrap;}
+.btn-ghost.danger{color:var(--danger);border-color:var(--danger);margin-right:auto;}
+@media (max-width:420px){ .o-grid{grid-template-columns:1fr;gap:0;} .o-btns .btn-main{flex:1 1 100%;order:-1;} .o-btns .btn-ghost{flex:1 1 auto;} .cart-bar{left:8px;right:8px;} }
+@media (min-width:900px){ .o-modal{max-width:600px;margin-top:4vh;padding:26px 26px;} .o-back{padding-top:2vh;} }
+.hex-in{width:104px;font-family:monospace;text-transform:uppercase;}

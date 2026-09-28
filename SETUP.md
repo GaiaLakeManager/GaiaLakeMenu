@@ -56,9 +56,20 @@ You've already set this up:
   see dish photos. Admin uploads here.
 - **Backup** and **Deleted Images** — kept private (admin-only), exactly as you set up.
 
-The admin app finds these three subfolders **by name** automatically — no need
-to hunt for their IDs. If a folder is renamed, update the matching `_FOLDER_NAME`
-value in `config.js`.
+The admin app finds these three subfolders **by name** automatically, but only
+**inside GuestView** — no need to hunt for their IDs. If a folder is renamed, update
+the matching `_FOLDER_NAME` value in `config.js`.
+
+If your **Backup** or **Deleted Images** folder sits somewhere else in Drive (for
+example outside GuestView to keep it private), paste its folder ID into
+`BACKUP_FOLDER_ID` / `DELETED_IMAGES_FOLDER_ID` in `config.js` (the ID is the long
+code at the end of the folder's Drive URL). The signed-in admin account needs
+**Editor** access to each folder. Note that a folder inside GuestView inherits the
+"Anyone with the link" sharing, so it is not private.
+
+After signing in to admin.html, the Dashboard shows whether each of the three
+folders was found and is writable. The first save of each day, week and month says
+"Backup created"; any backup problem is shown in the save message.
 
 ## 6. Test locally, then go live
 
@@ -125,8 +136,24 @@ the key from `config.js` or hide the file.
 - **No secrets are exposed.** The API key and Client ID are meant to be public
   for a browser-only app like this — real access control is Google's sign-in
   plus your Drive folder permissions.
-- **Backups**: every save writes a timestamped copy into the Backup folder
-  first. Nothing is deleted automatically — you can prune old backups by hand
-  whenever you like.
+- **Backups**: automatic and tiered, like the Inventory app. The Backup folder gets
+  one file per day, one per week and one per month, each holding the menu as it was
+  before that period's first save. Only the newest 14 daily, 8 weekly and 12 monthly
+  files are kept; older ones go to Drive's Trash. Change the limits with
+  `BACKUP_KEEP` in `config.js`.
 - **Deleted dish photos** move to "Deleted Images" instead of being permanently
   removed, so an accidental delete is recoverable from Drive directly.
+
+## Guest ordering (v2.0) — one-time setup
+
+Sign in to Google as the orders account (gaialakewebapps@gmail.com) for steps 1 to 4.
+
+1. **Orders folder.** In Drive create a folder named `Orders` outside GuestView. Share it as Editor with each admin account. Copy its ID (the end of the folder URL) into `ORDERS_FOLDER_ID` in config.js.
+2. **Menu access.** The script must be able to read the menu file. GuestView is shared "Anyone with the link", so this already works; otherwise share `gaia_lake_menu.json` with the orders account.
+3. **Telegram bot.** In Telegram, message @BotFather, send `/newbot` and follow the prompts to get a bot token. Open your new bot and press Start, then open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and copy the number after `"chat":{"id":`. (Do not share the token.)
+4. **Apps Script.** Go to script.google.com > New project, paste the contents of `Code.gs`. Project Settings > Script Properties, add: `MENU_FILE_ID` (same as config.js), `ORDERS_FOLDER_ID`, `ORDER_EMAIL`, `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`. Then Deploy > New deployment > Web app > Execute as **Me**, access **Anyone**, and approve the permissions (Drive, Mail, external requests). Copy the web app URL (ending in `/exec`).
+5. Paste that URL into `ORDER_SCRIPT_URL` in config.js and upload `config.js`, `index.html`, `orders.js`, `style.css` and `admin.html` to GitHub.
+6. Admin → Settings → **For orders**: the orders email is optional (guests see priyagaialake@gmail.com from config.js unless you enter another); enter the WhatsApp number if it differs from the bungalow phone, then Save.
+7. Test with a real order from a phone. When you later change `Code.gs`, use Deploy > Manage deployments > Edit > New version so the URL stays the same.
+
+Ordering buttons appear only when `ORDER_SCRIPT_URL` is filled in and Accepting Orders is on.
