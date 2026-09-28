@@ -80,17 +80,17 @@ function orderText(o){   // human-readable order + one #GLORDER line the admin p
 async function send(){
   const o = payload(), b = $('oSend'); b.disabled = true; b.textContent = 'Sending…';
   let why = '';
-  for (let a = 0; a < 2; a++){                       // one automatic retry; safe because the server ignores a repeated order ID
+  for (let a = 0; a < 3; a++){                       // automatic retries; safe because the server ignores a repeated order ID
     let j = null;
     try{
-      const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
       const r = await fetch(CONFIG.ORDER_SCRIPT_URL, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body:JSON.stringify(o), signal:c.signal });
       clearTimeout(t); j = await r.json();
     }catch(e){ why = e.name === 'AbortError' ? 'timed out' : e.message; console.error('Order send failed:', e); }
     if (j && j.ok){ OS.lastId = o.id; OS.id = null; showDone(o.id); return; }
     if (j && j.reject){ showForm(j.error); return; }
     if (j) why = j.error || 'server error';
-    if (a === 0){ b.textContent = 'Retrying…'; await new Promise(r => setTimeout(r, 2000)); }
+    if (a < 2){ b.textContent = 'Retrying…'; await new Promise(r => setTimeout(r, 1500)); }
   }
   showFallback(o, why);
 }
