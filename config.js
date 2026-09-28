@@ -52,7 +52,7 @@ const CONFIG = {
   GUEST_MENU_URL: "https://gaialakemanager.github.io/GaiaLakeMenu/index.html", 	 	
 
   // Guest ordering (v2.0): the Apps Script web-app URL (…/exec) and the private Orders folder ID (owned by the orders account).
-  ORDER_SCRIPT_URL: "",
+  ORDER_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzB0zcOSoT76o5p9E7uDNzfserKz_yYci9d7-nVZHqlrL924Yxb01_K1a0a9lx7IVGjhg/exec",
   ORDERS_FOLDER_ID: "1JIYhb80EuLtRGHBU0PPItqgZH_XxFH6f",
   // Email guests see and use in the fallback "Email" button (Admin → Settings → For orders overrides it if filled in).
   GUEST_ORDER_EMAIL: "priyagaialake@gmail.com",
