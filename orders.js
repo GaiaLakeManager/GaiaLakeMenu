@@ -1,9 +1,10 @@
 /* Gaia Lake Menu — guest ordering (v2.0). Loaded by index.html after the menu script. */
-let ORDERING = false, MENU = {};
+let ORDERING = false;
+const menuData = () => window.MENU || {};   // index.html stores the loaded menu in window.MENU
 const OS = { cart:new Map(), amend:null, lastId:null, id:null, f:{}, text:'' };
 const $ = id => document.getElementById(id);
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Colombo' });
-const dishBy = c => (MENU.dishes || []).find(d => Number(d.code) === Number(c));
+const dishBy = c => (menuData().dishes || []).find(d => Number(d.code) === Number(c));
 const code3 = c => '#' + String(c).padStart(3, '0');
 const usd = n => 'USD ' + Number(n).toFixed(2);   // all order prices are in USD; LKR conversion happens at final billing
 const lines = () => [...OS.cart.values()];
@@ -35,7 +36,7 @@ function grab(){
   try{ localStorage.setItem('gl-guest-details', JSON.stringify({ name:OS.f.name, room:OS.f.room, phone:OS.f.phone })); }catch(e){}
 }
 function showForm(err){
-  const f = OS.f, rooms = (MENU.settings || {}).rooms || [];
+  const f = OS.f, rooms = (menuData().settings || {}).rooms || [];
   const roomIn = rooms.length ? `<select id="fRoom"><option value="">Select room…</option>${rooms.map(r => `<option${r === f.room ? ' selected' : ''}>${esc(r)}</option>`).join('')}</select>` : `<input id="fRoom" value="${esc(f.room || '')}">`;
   $('orderTitle').textContent = OS.amend ? 'Amend your order' : 'Your order';
   $('orderBody').innerHTML = (err ? `<div class="o-err">${esc(err)}</div>` : '') +
@@ -103,7 +104,7 @@ function showDone(id){
     <div class="o-btns"><button class="btn-ghost" id="oAmend">Amend this order</button><button class="btn-main" id="oFinish">Done</button></div>`;
 }
 function showFallback(o, why){
-  const t = orderText(o), s = (MENU.settings || {}).orders || {}, p = MENU.profile || {}, q = encodeURIComponent(t);
+  const t = orderText(o), s = (menuData().settings || {}).orders || {}, p = menuData().profile || {}, q = encodeURIComponent(t);
   const em = s.email || CONFIG.GUEST_ORDER_EMAIL, wa = (s.whatsapp || p.phone || '').replace(/\D/g, ''), ph = (p.phone || '').replace(/\s+/g, ''); OS.text = t;
   $('orderTitle').textContent = 'Couldn’t send automatically';
   $('orderBody').innerHTML = `<p>Please send your order another way — the message is already written for you.</p><p class="rv-m" style="opacity:.6;font-size:.72rem">Reason: ${esc(why || 'unknown')}</p><div class="fb">
