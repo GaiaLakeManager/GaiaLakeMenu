@@ -142,7 +142,11 @@
             <div class="field"><label>Kitchen Opens</label><input type="time" id="kitchenOpen"></div>
             <div class="field"><label>Kitchen Closes</label><input type="time" id="kitchenClose"></div>
           </div>
-          <div class="hint">Times are in Sri Lanka time (Asia/Colombo), regardless of a guest's own timezone.</div>
+          <div class="field-row">
+            <div class="field"><label>Same-day order cutoff</label><input type="time" id="sameDayCutoff"></div>
+            <div class="field"><label>Latest dining time guests can pick</label><input type="time" id="lastDining"></div>
+          </div>
+          <div class="hint">Times are in Sri Lanka time (Asia/Colombo), regardless of a guest's own timezone. After the cutoff, guests can no longer choose today as the dining date (tomorrow onward still works). The dining time picker only allows Kitchen Opens through Latest dining time; anything outside that, guests are asked to write in the order Note instead. An order sent while the kitchen is closed still goes through, but the alert to you is marked so staff know it wasn't seen live.</div>
         </div>
 
         <div class="panel-box">
@@ -175,6 +179,16 @@
             <button class="btn btn-sm" id="addRoomBtn">+ Add Room</button>
           </div>
           <div class="hint">Guests pick their room from this list when ordering. Separate several with commas (up to 10 characters each). Leave empty to let guests type it.</div>
+        </div>
+
+        <div class="panel-box">
+          <h3>Group / Bulk-order Labels</h3>
+          <div class="tag-picker" id="groupLabelManageList"></div>
+          <div class="tag-add-row">
+            <input type="text" id="newGroupLabelInput" placeholder="e.g. Group, Bungalow, All Rooms">
+            <button class="btn btn-sm" id="addGroupLabelBtn">+ Add Label</button>
+          </div>
+          <div class="hint">Added to the guest Room dropdown alongside Room Numbers. Selecting one of these shows the Group Selection Policy reminder on the order review screen. Add or rename these anytime — no code change needed.</div>
         </div>
 
         <div class="panel-box">
@@ -259,6 +273,10 @@
     <h3 id="catModalTitle">Add Category</h3>
     <div class="field"><label>Icon (emoji, optional)</label><input type="text" id="catIcon" maxlength="4" placeholder="🌅"></div>
     <div class="field"><label>Category Name *</label><input type="text" id="catName" placeholder="Breakfast"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="catBB" style="width:auto;">
+      <label for="catBB" style="margin:0;">Included on Bed &amp; Breakfast (guests on BB see items here as free)</label>
+    </div>
     <div class="btn-row" style="justify-content:space-between;">
       <button class="btn btn-danger hidden" id="deleteCatBtn">Delete</button>
       <div class="btn-row">
@@ -306,7 +324,7 @@ let logoPendingBlob = null, bannerPendingBlob = null;
 const DEFAULT_STATE = () => ({
   meta:{ updated:new Date().toISOString() },
   profile:{ name:"Gaia Lake - Kandalama", phone:"", city:"", country:"" },
-  settings:{ acceptingOrders:true, kitchenOpen:"06:00", kitchenClose:"23:00",
+  settings:{ acceptingOrders:true, kitchenOpen:"06:00", kitchenClose:"22:00", sameDayCutoff:"19:00", lastDining:"21:00", groupLabels:[],
              theme:{ primary: CONFIG.DEFAULT_THEME.primary, secondary: CONFIG.DEFAULT_THEME.secondary } },
   categories:[], dishes:[], tags:["Popular","Chef's Special","Spicy"]
 });
@@ -738,7 +756,7 @@ function renderCategories(){
     row.className = 'cat-row';
     row.innerHTML = `
       <span class="icon-in">${cat.icon||'🍽️'}</span>
-      <span class="name">${cat.name}</span>
+      <span class="name">${cat.name}${cat.bbIncluded ? ' <span class="tag" style="font-size:.65rem;">BB</span>' : ''}</span>
       <span class="count">${count} item${count===1?'':'s'}</span>
       <div class="order-btns">
         <button ${i===0?'disabled':''} data-dir="-1">▲</button>
@@ -769,6 +787,7 @@ function openCatModal(cat){
   document.getElementById('catModalTitle').textContent = cat ? 'Edit Category' : 'Add Category';
   document.getElementById('catIcon').value = cat ? (cat.icon||'') : '';
   document.getElementById('catName').value = cat ? cat.name : '';
+  document.getElementById('catBB').checked = cat ? !!cat.bbIncluded : false;
   document.getElementById('deleteCatBtn').classList.toggle('hidden', !cat);
   document.getElementById('catModalBackdrop').classList.add('open');
 }
@@ -779,11 +798,12 @@ document.getElementById('saveCatBtn').onclick = async () => {
   const name = document.getElementById('catName').value.trim();
   if (!name){ toast('Category name is required.'); return; }
   const icon = document.getElementById('catIcon').value.trim();
+  const bbIncluded = document.getElementById('catBB').checked;
   if (editingCatId){
     const c = state.categories.find(c=>c.id===editingCatId);
-    c.name = name; c.icon = icon;
+    c.name = name; c.icon = icon; c.bbIncluded = bbIncluded;
   } else {
-    state.categories.push({ id: uid(), name, icon, order: state.categories.reduce((m,c)=>Math.max(m,c.order||0),-1)+1 });
+    state.categories.push({ id: uid(), name, icon, bbIncluded, order: state.categories.reduce((m,c)=>Math.max(m,c.order||0),-1)+1 });
   }
   closeCatModal(); renderCategories(); renderDishSection();
   await persist();
@@ -1021,6 +1041,8 @@ function renderSettings(){
   document.getElementById('settAcceptToggle').checked = state.settings.acceptingOrders !== false;
   document.getElementById('kitchenOpen').value = state.settings.kitchenOpen || '06:00';
   document.getElementById('kitchenClose').value = state.settings.kitchenClose || '23:00';
+  document.getElementById('sameDayCutoff').value = state.settings.sameDayCutoff || '19:00';
+  document.getElementById('lastDining').value = state.settings.lastDining || '21:00';
   document.getElementById('ordEmail').value = (state.settings.orders||{}).email || '';
   document.getElementById('ordWhatsapp').value = (state.settings.orders||{}).whatsapp || '';
   document.getElementById('colorPrimary').value = state.settings.theme.primary;
@@ -1028,6 +1050,7 @@ function renderSettings(){
   document.getElementById('colorPrimaryHex').value = state.settings.theme.primary;
   document.getElementById('colorSecondaryHex').value = state.settings.theme.secondary;
   renderRooms();
+  renderGroupLabels();
   document.getElementById('whatsNewVersion').textContent = 'v' + CONFIG.APP_VERSION;
   document.getElementById('whatsNewSummary').textContent = CONFIG.WHATS_NEW_LATEST || '';
   renderTagPicker(document.getElementById('tagManageList'), []); // display-only list below
@@ -1044,7 +1067,7 @@ function renderSettings(){
 }
 document.getElementById('colorPrimary').oninput = e => { document.getElementById('colorPrimaryHex').value = e.target.value; document.documentElement.style.setProperty('--brand-1', e.target.value); };
 document.getElementById('colorSecondary').oninput = e => { document.getElementById('colorSecondaryHex').value = e.target.value; document.documentElement.style.setProperty('--brand-2', e.target.value); };
-[['Primary','--brand-1'],['Secondary','--brand-2']].forEach(([n,v]) => {     // type a hex code instead of using the picker
+[['Primary','--brand-1'],['Secondary','--brand-2']].forEach(([n,v]) => {     // type or paste a hex code instead of using the picker
   const h = document.getElementById('color'+n+'Hex');
   const norm = () => { let x = h.value.trim().replace(/\s+/g,''); if (x && x[0] !== '#') x = '#' + x;
     if (/^#[0-9a-fA-F]{3}$/.test(x)) x = '#' + x.slice(1).split('').map(c => c + c).join('');
@@ -1068,6 +1091,18 @@ document.getElementById('addRoomBtn').onclick = async () => {
   rs.sort((x,y) => x.localeCompare(y, undefined, {numeric:true}));
   state.settings.rooms = rs; inp.value = ''; renderRooms(); await persist(false);
 };
+function renderGroupLabels(){
+  const gs = state.settings.groupLabels || [], el = document.getElementById('groupLabelManageList');
+  el.innerHTML = gs.map(r => `<span class="tag-chip selected">${esc(r)} <span data-delgroup="${esc(r)}" style="cursor:pointer;margin-left:4px;">×</span></span>`).join('') || '<span class="hint">None added — guests won\'t see a group option.</span>';
+  el.querySelectorAll('[data-delgroup]').forEach(x => { x.onclick = async () => { state.settings.groupLabels = gs.filter(r => r !== x.dataset.delgroup); renderGroupLabels(); await persist(false); }; });
+}
+document.getElementById('addGroupLabelBtn').onclick = async () => {
+  const inp = document.getElementById('newGroupLabelInput'), add = inp.value.split(',').map(s => s.trim().slice(0,20)).filter(Boolean);
+  if (!add.length) return;
+  const gs = state.settings.groupLabels || [];
+  add.forEach(r => { if (!gs.some(x => x.toLowerCase() === r.toLowerCase())) gs.push(r); });
+  state.settings.groupLabels = gs; inp.value = ''; renderGroupLabels(); await persist(false);
+};
 document.getElementById('addTagBtn').onclick = async () => {
   const v = document.getElementById('newTagInput').value.trim();
   if (!v) return;
@@ -1080,6 +1115,8 @@ document.getElementById('saveSettingsBtn').onclick = async () => {
   state.settings.acceptingOrders = document.getElementById('settAcceptToggle').checked;
   state.settings.kitchenOpen = document.getElementById('kitchenOpen').value;
   state.settings.kitchenClose = document.getElementById('kitchenClose').value;
+  state.settings.sameDayCutoff = document.getElementById('sameDayCutoff').value;
+  state.settings.lastDining = document.getElementById('lastDining').value;
   state.settings.orders = { email: document.getElementById('ordEmail').value.trim(), whatsapp: document.getElementById('ordWhatsapp').value.trim() };
   state.settings.theme = {
     primary: document.getElementById('colorPrimary').value,

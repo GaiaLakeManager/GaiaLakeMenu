@@ -61,6 +61,6 @@ const CONFIG = {
 
   // --- App version & What's New (Claude updates these two lines on every release —
   // admin no longer needs to type a version number anywhere) -----------------
-  APP_VERSION: "2.0.2",
-  WHATS_NEW_LATEST: "Orders are now priced in USD everywhere (guest order window, kitchen alerts, saved orders). LKR conversion happens at final billing."
+  APP_VERSION: "2.0.3",
+  WHATS_NEW_LATEST: "Ordering hours: same-day orders stop at 7 PM, dining time limited to 6 AM–9 PM. Guests on Bed & Breakfast can mark breakfast as included. Room field is now a dropdown with admin-managed Group/bulk-order labels. When ordering is paused, guests see a WhatsApp/Email contact banner instead."
 };

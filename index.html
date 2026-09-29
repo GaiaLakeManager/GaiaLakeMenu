@@ -29,6 +29,7 @@
     <h2 class="menu-title">Guest Food &amp; Beverage Menu</h2>
     <div class="status-row" id="statusRow"></div>
     <div class="hours-line" id="hoursLine"></div>
+    <div class="order-off-banner hidden" id="orderOffBanner"></div>
     <div class="policy-note">
       <strong>GUEST ORDERING POLICY &amp; NOTES</strong>
       <ul>
@@ -124,14 +125,19 @@ function render(data){
     holder.innerHTML = `<img src="${driveImageUrl(profile.logoFileId,200)}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">`;
   }
 
+  const orderingOff = settings.acceptingOrders === false;
   const statusRow = document.getElementById('statusRow');
+  const hoursLine = document.getElementById('hoursLine');
+  const offBanner = document.getElementById('orderOffBanner');
   statusRow.innerHTML = '';
-  const status = computeOpenStatus(settings);
-  if (status){
-    const b = document.createElement('span');
-    b.className = 'badge ' + (status.open ? 'open' : 'closed');
-    b.innerHTML = `<span class="dot"></span>${esc(status.label)}`;
-    statusRow.appendChild(b);
+  if (!orderingOff){
+    const status = computeOpenStatus(settings);
+    if (status){
+      const b = document.createElement('span');
+      b.className = 'badge ' + (status.open ? 'open' : 'closed');
+      b.innerHTML = `<span class="dot"></span>${esc(status.label)}`;
+      statusRow.appendChild(b);
+    }
   }
   if (profile.phone){
     const a = document.createElement('a');
@@ -139,9 +145,23 @@ function render(data){
     a.innerHTML = '📞 Call';
     statusRow.appendChild(a);
   }
-  const open12 = to12h(settings.kitchenOpen), close12 = to12h(settings.kitchenClose);
-  document.getElementById('hoursLine').textContent = open12 && close12
-    ? `Open to Order ${open12} to ${close12}` : '';
+  if (orderingOff){
+    hoursLine.textContent = '';
+    const ords = settings.orders || {};
+    const em = ords.email || CONFIG.GUEST_ORDER_EMAIL, waNum = (ords.whatsapp || profile.phone || '').replace(/\D/g,'');
+    offBanner.classList.remove('hidden');
+    offBanner.innerHTML = `<p>Online ordering is temporarily unavailable. To order, please message or email our staff with the item code, name and quantity for each item — before or after check-in.</p>
+      <div class="order-off-label">Please WhatsApp/Email</div>
+      <div class="order-off-btns">
+        ${waNum ? `<a class="btn-main" href="https://wa.me/${waNum}">WhatsApp</a>` : ''}
+        ${em ? `<a class="btn-ghost" href="mailto:${esc(em)}">Email</a>` : ''}
+      </div>`;
+  } else {
+    offBanner.classList.add('hidden');
+    offBanner.innerHTML = '';
+    const open12 = to12h(settings.kitchenOpen), close12 = to12h(settings.kitchenClose);
+    hoursLine.textContent = open12 && close12 ? `Open to Order ${open12} to ${close12}` : '';
+  }
 
 
   const categories = (data.categories || []).map((c,i)=>({c,i}))
